@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
 @Component
 public class MenuSeeder implements CommandLineRunner {
 
@@ -32,13 +31,13 @@ public class MenuSeeder implements CommandLineRunner {
             Optional<TipoUsuario> orientador = tipoUsuarioRepository.findByNome("Orientador");
 
             aluno.ifPresent(tipo -> {
-                menus.add(new Menus("Dashboard", "icon-chart-pie-36", "/aluno/estatistica", tipo.getId().toString()));
-                menus.add(new Menus("Perfil", "icon-user", "/aluno/perfil", tipo.getId().toString()));
+                menus.add(new Menus("Dashboard", "icon-chart-pie-36", "/aluno/estatistica", tipo));
+                menus.add(new Menus("Perfil", "icon-user", "/aluno/perfil", tipo));
             });
 
             orientador.ifPresent(tipo -> {
-                menus.add(new Menus("Dashboard", "icon-chart-bar-32", "/orientador/estatistica", tipo.getId().toString()));
-                menus.add(new Menus("Gerenciar Alunos", "icon-users", "/orientador/alunos", tipo.getId().toString()));
+                menus.add(new Menus("Dashboard", "icon-chart-bar-32", "/orientador/estatistica", tipo));
+                menus.add(new Menus("Gerenciar Alunos", "icon-users", "/orientador/alunos", tipo));
             });
 
             menuRepository.saveAll(menus);

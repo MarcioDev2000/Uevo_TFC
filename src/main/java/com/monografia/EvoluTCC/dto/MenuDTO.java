@@ -1,39 +1,24 @@
-package com.monografia.EvoluTCC.models;
+package com.monografia.EvoluTCC.dto;
 
-import jakarta.persistence.*;
 import java.util.UUID;
 
-@Entity
-@Table(name = "menus")
-public class Menus {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", updatable = false, nullable = false)
+public class MenuDTO {
     private UUID id;
-
-    @Column(nullable = false)
     private String nome;
-
-    @Column(nullable = false)
     private String icon;
-
-    @Column(nullable = false)
     private String rota;
-
-    @ManyToOne
-    @JoinColumn(name = "tipo_usuario_id", nullable = false)
-    private TipoUsuario tipoUsuario;
+    private String id_do_usuario;
 
     // Construtor padrão
-    public Menus() {}
+    public MenuDTO() {}
 
     // Construtor com parâmetros
-    public Menus(String nome, String icon, String rota, TipoUsuario tipoUsuario) {
+    public MenuDTO(UUID id, String nome, String icon, String rota, String id_do_usuario) {
+        this.id = id;
         this.nome = nome;
         this.icon = icon;
         this.rota = rota;
-        this.tipoUsuario = tipoUsuario;
+        this.id_do_usuario = id_do_usuario;
     }
 
     // Getters e Setters
@@ -69,11 +54,11 @@ public class Menus {
         this.rota = rota;
     }
 
-    public TipoUsuario getTipoUsuario() {
-        return tipoUsuario;
+    public String getId_do_usuario() {
+        return id_do_usuario;
     }
 
-    public void setTipoUsuario(TipoUsuario tipoUsuario) {
-        this.tipoUsuario = tipoUsuario;
+    public void setId_do_usuario(String id_do_usuario) {
+        this.id_do_usuario = id_do_usuario;
     }
 }
