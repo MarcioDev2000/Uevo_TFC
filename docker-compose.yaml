@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1
+    command: start-dev  
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://db:5432/evolu_tcc
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=root
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: evolu_tcc
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_keycloak:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "evolu_tcc"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/evolu_tcc
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_PROFILES_ACTIVE: prod
+      KEYCLOAK_SERVER_URL: http://keycloak:8080/realms/spring-boot-realm
+      KEYCLOAK_CLIENT_ID: spring-boot-app
+      KEYCLOAK_CLIENT_SECRET: cD4mF3odJKfM3gMwucHNpSrrVYj0tjeK
+    depends_on:
+      - db
+      - keycloak
+    volumes:
+      - app_logs:/app/logs
+
+volumes:
+  postgres_keycloak:
+  app_logs:
