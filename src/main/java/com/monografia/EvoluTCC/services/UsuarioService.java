@@ -47,17 +47,17 @@ public class UsuarioService {
         if (usuarioRepository.findByEmail(usuarioDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email já cadastrado.");
         }
-
+    
         // Valida o NIF com o serviço externo
         Map<String, Object> dadosBI = sepeService.consultarBI(usuarioDto.getNif());
         if (dadosBI == null || dadosBI.isEmpty()) {
             throw new IllegalArgumentException("Não foi possível validar os dados do BI.");
         }
-
+    
         // Busca o TipoUsuario pelo UUID
         TipoUsuario tipoUsuario = tipoUsuarioRepository.findById(usuarioDto.getTipoUsuario())
                 .orElseThrow(() -> new RuntimeException("Tipo de usuário não encontrado"));
-
+    
         // Cria o novo usuário
         Usuario usuario = new Usuario();
         usuario.setNome(usuarioDto.getNome());
@@ -68,15 +68,17 @@ public class UsuarioService {
         usuario.setNif(usuarioDto.getNif());
         usuario.setTipoUsuario(tipoUsuario); // Define o TipoUsuario
         usuario.setPassword(passwordEncoder.encode(usuarioDto.getPassword()));
-
-        // Define especialidade e matrícula, se fornecidas
+    
+        // Define especialidade, se fornecida
         if (usuarioDto.getEspecialidade() != null) {
             usuario.setEspecialidade(usuarioDto.getEspecialidade());
         }
+    
+        // Define matrícula, se fornecida
         if (usuarioDto.getMatricula() != null) {
             usuario.setMatricula(usuarioDto.getMatricula());
         }
-
+    
         try {
             // Salva o usuário no banco de dados
             Usuario salvarUsuario = usuarioRepository.save(usuario);

@@ -27,17 +27,32 @@ public class MenuSeeder implements CommandLineRunner {
         if (menuRepository.count() == 0) {
             List<Menus> menus = new ArrayList<>();
 
+            Optional<TipoUsuario> admin = tipoUsuarioRepository.findByNome("Admin");
             Optional<TipoUsuario> aluno = tipoUsuarioRepository.findByNome("Aluno");
             Optional<TipoUsuario> orientador = tipoUsuarioRepository.findByNome("Orientador");
 
+            admin.ifPresent(tipo -> {
+                menus.add(new Menus("Dashboard", "icon-chart-bar-32", "/admin/dashboard", tipo));
+                menus.add(new Menus("Ver Orientadores", "icon-single-02", "/admin/orientadores", tipo));
+                menus.add(new Menus("Ver Alunos", "icon-single-02", "/admin/alunos", tipo));
+                menus.add(new Menus("Marcar Pré-Defesa", "icon-calendar-60", "/admin/pre-defesa", tipo));
+                menus.add(new Menus("Marcar Defesa", "icon-calendar-60", "/admin/defesa", tipo));
+                menus.add(new Menus("Gestão de Monografias", "icon-paper", "/admin/monografias", tipo));
+            });
+
             aluno.ifPresent(tipo -> {
                 menus.add(new Menus("Dashboard", "icon-chart-pie-36", "/aluno/estatistica", tipo));
-                menus.add(new Menus("Perfil", "icon-user", "/aluno/perfil", tipo));
+                menus.add(new Menus("Perfil", "icon-single-02", "/aluno/perfil", tipo));
+                menus.add(new Menus("Inscrição de Monografia", "icon-paper", "/aluno/inscricao-monografia", tipo));
+                menus.add(new Menus("Minhas Monografias", "icon-book-bookmark", "/aluno/minhas-monografias", tipo));
             });
 
             orientador.ifPresent(tipo -> {
                 menus.add(new Menus("Dashboard", "icon-chart-bar-32", "/orientador/estatistica", tipo));
-                menus.add(new Menus("Gerenciar Alunos", "icon-users", "/orientador/alunos", tipo));
+                menus.add(new Menus("Gerenciar Alunos", "icon-single-02", "/orientador/alunos", tipo));
+                menus.add(new Menus("Monografias Orientadas", "icon-book-bookmark", "/orientador/monografias", tipo));
+                menus.add(new Menus("Avaliar Pré-Defesa", "icon-check-2", "/orientador/avaliar-pre-defesa", tipo));
+                menus.add(new Menus("Avaliar Defesa", "icon-check-2", "/orientador/avaliar-defesa", tipo));
             });
 
             menuRepository.saveAll(menus);

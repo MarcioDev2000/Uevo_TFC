@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Map;
 @RestController
-@RequestMapping("/especialidades")
+@RequestMapping("/especialidades/")
 public class EspecialidadeController {
 
     private final EspecialidadeRepository especialidadeRepository;
@@ -18,12 +20,20 @@ public class EspecialidadeController {
         this.especialidadeRepository = especialidadeRepository;
     }
 
-    // Endpoint para listar todas as especialidades
     @GetMapping
-    public List<Especialidade> getAllEspecialidades() {
-        return especialidadeRepository.findAll();
+    public ResponseEntity<List<Map<String, Object>>> getAllEspecialidades() {
+        List<Map<String, Object>> especialidades = especialidadeRepository.findAll().stream()
+                .map(especialidade -> {
+                    return Map.of(
+                        "id", (Object) especialidade.getId(),  
+                        "nome", (Object) especialidade.getNome()
+                    );
+                })
+                .collect(Collectors.toList());
+    
+        return ResponseEntity.ok(especialidades);
     }
-
+    
     // Endpoint para buscar uma especialidade pelo ID
     @GetMapping("/{id}")
     public ResponseEntity<Especialidade> getEspecialidadeById(@PathVariable UUID id) {

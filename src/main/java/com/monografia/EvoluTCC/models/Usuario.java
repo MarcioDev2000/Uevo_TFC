@@ -68,6 +68,7 @@ public class Usuario {
         this.tipoUsuario = tipoUsuario;
     }
 
+
     // Getters e Setters
     public UUID getId() {
         return id;

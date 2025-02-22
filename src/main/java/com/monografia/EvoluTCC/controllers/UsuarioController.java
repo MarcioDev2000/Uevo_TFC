@@ -22,7 +22,7 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<?> criarUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
         try {
             Usuario usuarioCriado = usuarioService.criarUsuario(usuarioDto);
@@ -44,7 +44,7 @@ public class UsuarioController {
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}/")
     public ResponseEntity<Usuario> listarUsuarioPorId(@PathVariable UUID id) {
         Optional<Usuario> usuario = usuarioService.listarUsuarioPorId(id);
         if (usuario.isPresent()) {

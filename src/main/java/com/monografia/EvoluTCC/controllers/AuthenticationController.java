@@ -30,7 +30,7 @@ public class AuthenticationController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/login")
+    @PostMapping("/login/")
     public ResponseEntity<?> loginUser(@RequestBody UsuarioDto usuarioDto) {
         try {
             // Autentica o usuário
@@ -51,6 +51,7 @@ public class AuthenticationController {
             response.put("email", userModel.getEmail());
             response.put("tipo_de_entidade", userModel.getTipoUsuario().getNome());
             response.put("tipo_de_entidade_id", userModel.getTipoUsuario().getId());
+            response.put("rota", userModel.getTipoUsuario().getRota());
             response.put("token", token);
 
             return ResponseEntity.ok(response);
@@ -61,7 +62,7 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/forgot-password")
+    @PostMapping("/email-redefinir-palavra-passe/")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         try {
@@ -73,7 +74,7 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/reset-password/")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
         try {
             // Use a instância de usuarioService para chamar o método

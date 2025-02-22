@@ -30,10 +30,10 @@ public class UsuarioDto {
     @Size(max = 20, message = "O NIF deve ter no máximo 20 caracteres")
     private String nif;
     
-    private Especialidade especialidade;
+    private Especialidade especialidade; // Opcional
     
     @Size(max = 50, message = "A matrícula deve ter no máximo 50 caracteres")
-    private String matricula;
+    private String matricula; // Opcional
     
     @NotBlank(message = "A senha é obrigatória")
     private String password;
