@@ -1,5 +1,5 @@
 package com.monografia.EvoluTCC.models;
-
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
@@ -58,8 +58,30 @@ public class Monografia {
 
     private String descricaoMelhoria;
 
+    @Column(name = "data_status")
+    private LocalDateTime dataStatus;
+
     // Construtor padrão
     public Monografia() {}
+
+    public Monografia(Usuario aluno, Usuario admin, Usuario orientador, Especialidade especialidade, String tema,
+    byte[] extratoBancario, byte[] declaracaoNotas, byte[] termoOrientador, byte[] projeto,
+    byte[] documentoBi, StatusMonografia status, String descricaoMelhoria) {
+this.aluno = aluno;
+this.admin = admin;
+this.orientador = orientador;
+this.especialidade = especialidade;
+this.tema = tema;
+this.extratoBancario = extratoBancario;
+this.declaracaoNotas = declaracaoNotas;
+this.termoOrientador = termoOrientador;
+this.projeto = projeto;
+this.documentoBi = documentoBi;
+this.status = status;
+this.descricaoMelhoria = descricaoMelhoria;
+this.dataStatus = LocalDateTime.now();
+}
+
 
     // Getters e Setters
     public UUID getId() {
@@ -164,5 +186,13 @@ public class Monografia {
     
     public void setAdmin(Usuario admin) {
         this.admin = admin;
+    }
+
+    public LocalDateTime getDataStatus() {
+        return dataStatus;
+    }
+
+    public void setDataStatus(LocalDateTime dataStatus) {
+        this.dataStatus = dataStatus;
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Repository;
 
 import com.monografia.EvoluTCC.models.Usuario;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,5 +13,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByResetPasswordToken(String resetPasswordToken);
     boolean existsByEmail(String email);
-
+    List<Usuario> findByEspecialidadeIdAndTipoUsuarioNome(UUID especialidadeId, String tipoUsuarioNome);
 }

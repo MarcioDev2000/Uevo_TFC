@@ -15,7 +15,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -36,42 +41,51 @@ public class MonografiaService {
 
     // Cria uma nova monografia com status PENDENTE
     public Monografia createMonografia(String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
-                                      MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
-                                      UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
-        validarDocumento(extratoBancario);
-        validarDocumento(termoOrientador);
-        validarDocumento(declaracaoNotas);
-        validarDocumento(projeto);
-        validarDocumento(documentoBi);
+    MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
+    UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
+validarDocumento(extratoBancario);
+validarDocumento(termoOrientador);
+validarDocumento(declaracaoNotas);
+validarDocumento(projeto);
+validarDocumento(documentoBi);
 
-        Usuario aluno = usuarioRepository.findById(alunoId)
-                .orElseThrow(() -> new RuntimeException("Aluno não encontrado com o ID: " + alunoId));
+// Busca o aluno
+Usuario aluno = usuarioRepository.findById(alunoId)
+.orElseThrow(() -> new RuntimeException("Aluno não encontrado com o ID: " + alunoId));
 
-        Usuario orientador = usuarioRepository.findById(orientadorId)
-                .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
+// Busca o orientador e valida se ele pertence à especialidade escolhida
+Usuario orientador = usuarioRepository.findById(orientadorId)
+.orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
 
-        Especialidade especialidade = especialidadeRepository.findById(especialidadeId)
-                .orElseThrow(() -> new RuntimeException("Especialidade não encontrada com o ID: " + especialidadeId));
+if (!orientador.getEspecialidade().getId().equals(especialidadeId)) {
+throw new RuntimeException("O orientador selecionado não pertence à especialidade escolhida.");
+}
 
-        Monografia monografia = new Monografia();
-        monografia.setTema(tema);
-        monografia.setExtratoBancario(extratoBancario.getBytes());
-        monografia.setTermoOrientador(termoOrientador.getBytes());
-        monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
-        monografia.setProjeto(projeto.getBytes());
-        monografia.setDocumentoBi(documentoBi.getBytes());
-        monografia.setStatus(StatusMonografia.PENDENTE);
-        monografia.setAluno(aluno);
-        monografia.setOrientador(orientador);
-        monografia.setEspecialidade(especialidade);
+// Busca a especialidade
+Especialidade especialidade = especialidadeRepository.findById(especialidadeId)
+.orElseThrow(() -> new RuntimeException("Especialidade não encontrada com o ID: " + especialidadeId));
 
-        Monografia savedMonografia = monografiaRepository.save(monografia);
+// Cria a monografia
+Monografia monografia = new Monografia();
+monografia.setTema(tema);
+monografia.setExtratoBancario(extratoBancario.getBytes());
+monografia.setTermoOrientador(termoOrientador.getBytes());
+monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
+monografia.setProjeto(projeto.getBytes());
+monografia.setDocumentoBi(documentoBi.getBytes());
+monografia.setStatus(StatusMonografia.PENDENTE);
+monografia.setAluno(aluno);
+monografia.setOrientador(orientador);
+monografia.setEspecialidade(especialidade);
+monografia.setDataStatus(LocalDateTime.now());
 
-        // Notifica o orientador
-        userProducer.notifyOrientador(savedMonografia);
+Monografia savedMonografia = monografiaRepository.save(monografia);
 
-        return savedMonografia;
-    }
+// Notifica o orientador
+userProducer.notifyOrientador(savedMonografia);
+
+return savedMonografia;
+}
 
     // Atualiza a monografia com correções do aluno
     public Monografia updateMonografia(UUID id, String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
@@ -182,11 +196,16 @@ public class MonografiaService {
     // Métodos auxiliares
     @SuppressWarnings("null")
     private void validarDocumento(MultipartFile documento) {
-        if (documento != null && !documento.isEmpty() && !documento.getContentType().equals("application/pdf")) {
-            throw new IllegalArgumentException("O documento " + documento.getOriginalFilename() + " deve ser no formato PDF.");
+        if (documento != null && !documento.isEmpty()) {
+            if (!documento.getContentType().equals("application/pdf")) {
+                throw new IllegalArgumentException("O documento " + documento.getOriginalFilename() + " deve ser no formato PDF.");
+            }
+            if (documento.getSize() > 5 * 1024 * 1024) { // 5MB
+                throw new IllegalArgumentException("O documento " + documento.getOriginalFilename() + " deve ter no máximo 5MB.");
+            }
         }
     }
-
+    
     public Monografia getMonografiaById(UUID id) {
         return monografiaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Monografia não encontrada com o ID: " + id));
@@ -227,5 +246,97 @@ public class MonografiaService {
         }
         return monografiaRepository.findByOrientadorId(orientadorId);
     }
+
+    public Map<String, Object> getEstatisticasAluno(UUID alunoId) {
+    Map<String, Object> estatisticas = new HashMap<>();
+
+    // Busca todas as monografias do aluno
+    List<Monografia> monografias = monografiaRepository.findByAlunoId(alunoId);
+
+    if (monografias.isEmpty()) {
+        throw new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId);
+    }
+
+    // Pega a última monografia (assumindo que o aluno tem apenas uma monografia ativa)
+    Monografia ultimaMonografia = monografias.get(monografias.size() - 1);
+
+    // Status atual da monografia
+    estatisticas.put("statusAtual", ultimaMonografia.getStatus());
+
+    // Tempo no status atual (em dias)
+    long diasNoStatus = calcularDiasNoStatus(ultimaMonografia);
+    estatisticas.put("diasNoStatus", diasNoStatus);
+
+    // Número de revisões realizadas
+    long numeroRevisoes = monografias.stream()
+            .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
+            .count();
+    estatisticas.put("numeroRevisoes", numeroRevisoes);
+
+    // Documentos pendentes
+    List<String> documentosPendentes = verificarDocumentosPendentes(ultimaMonografia);
+    estatisticas.put("documentosPendentes", documentosPendentes);
+
+    // Tempo médio de revisão (em dias)
+    double tempoMedioRevisao = calcularTempoMedioRevisao(monografias);
+    estatisticas.put("tempoMedioRevisao", tempoMedioRevisao);
+
+    // Chance de aprovação (exemplo simplificado)
+    double chanceAprovacao = calcularChanceAprovacao(ultimaMonografia);
+    estatisticas.put("chanceAprovacao", chanceAprovacao + "%");
+
+    return estatisticas;
+}
+
+// Método auxiliar para calcular dias no status atual
+private long calcularDiasNoStatus(Monografia monografia) {
+    if (monografia.getStatus() == StatusMonografia.PENDENTE || monografia.getStatus() == StatusMonografia.EM_REVISAO) {
+        LocalDateTime dataAtual = LocalDateTime.now();
+        LocalDateTime dataStatus = monografia.getDataStatus(); // Supondo que você tenha um campo para armazenar a data do último status
+        return ChronoUnit.DAYS.between(dataStatus, dataAtual);
+    }
+    return 0;
+}
+
+// Método auxiliar para verificar documentos pendentes
+private List<String> verificarDocumentosPendentes(Monografia monografia) {
+    List<String> documentosPendentes = new ArrayList<>();
+    if (monografia.getExtratoBancario() == null || monografia.getExtratoBancario().length == 0) {
+        documentosPendentes.add("Extrato Bancário");
+    }
+    if (monografia.getTermoOrientador() == null || monografia.getTermoOrientador().length == 0) {
+        documentosPendentes.add("Termo de Orientador");
+    }
+    if (monografia.getDeclaracaoNotas() == null || monografia.getDeclaracaoNotas().length == 0) {
+        documentosPendentes.add("Declaração de Notas");
+    }
+    if (monografia.getProjeto() == null || monografia.getProjeto().length == 0) {
+        documentosPendentes.add("Projeto");
+    }
+    if (monografia.getDocumentoBi() == null || monografia.getDocumentoBi().length == 0) {
+        documentosPendentes.add("Documento de Identificação");
+    }
+    return documentosPendentes;
+}
+
+// Método auxiliar para calcular o tempo médio de revisão
+private double calcularTempoMedioRevisao(List<Monografia> monografias) {
+    return monografias.stream()
+            .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
+            .mapToLong(this::calcularDiasNoStatus)
+            .average()
+            .orElse(0);
+}
+
+// Método auxiliar para calcular a chance de aprovação (exemplo simplificado)
+private double calcularChanceAprovacao(Monografia monografia) {
+    if (monografia.getStatus() == StatusMonografia.APROVADO) {
+        return 100.0;
+    }
+    if (monografia.getStatus() == StatusMonografia.EM_REVISAO) {
+        return 70.0; // Exemplo: 70% de chance se estiver em revisão
+    }
+    return 30.0; // Exemplo: 30% de chance se estiver pendente
+}
     
 }

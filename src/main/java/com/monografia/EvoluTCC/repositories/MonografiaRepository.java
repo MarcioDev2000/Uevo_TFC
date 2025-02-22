@@ -34,4 +34,5 @@ public interface MonografiaRepository extends JpaRepository<Monografia, UUID> {
 
     // Buscar monografias por status e tema
     List<Monografia> findByStatusAndTemaContainingIgnoreCase(StatusMonografia status, String tema);
+
 }
