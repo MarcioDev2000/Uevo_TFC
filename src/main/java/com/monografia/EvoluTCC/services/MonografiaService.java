@@ -5,8 +5,12 @@ import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.producers.UserProducer;
 import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
+import com.monografia.EvoluTCC.dto.MonografiaResponseDTO;
 import com.monografia.EvoluTCC.repositories.MonografiaRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
+
+import jakarta.transaction.Transactional;
+
 import com.monografia.EvoluTCC.repositories.EspecialidadeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -157,6 +161,55 @@ return savedMonografia;
 
         return monografiaRepository.save(monografia);
     }
+
+    @Transactional
+public MonografiaResponseDTO getMonografiaByAlunoId(UUID alunoId) {
+    Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId));
+
+    // Adiciona links para visualização dos documentos
+    adicionarLinksDocumentos(monografia);
+
+    // Converte a entidade Monografia para o DTO
+    return toDTO(monografia);
+}
+
+private MonografiaResponseDTO toDTO(Monografia monografia) {
+    MonografiaResponseDTO dto = new MonografiaResponseDTO();
+    dto.setId(monografia.getId());
+    dto.setTema(monografia.getTema());
+    dto.setStatus(monografia.getStatus().toString()); 
+    dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+    dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+    dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+    dto.setLinkProjeto(monografia.getLinkProjeto());
+    dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+
+    return dto;
+}
+
+private void adicionarLinksDocumentos(Monografia monografia) {
+    UUID monografiaId = monografia.getId();
+    String baseUrl = "http://localhost:8082/monografias/" + monografiaId + "/documentos/";
+
+    if (monografia.getExtratoBancario() != null && monografia.getExtratoBancario().length > 0) {
+        monografia.setLinkExtratoBancario(baseUrl + "extrato_bancario/visualizar");
+    }
+    if (monografia.getDeclaracaoNotas() != null && monografia.getDeclaracaoNotas().length > 0) {
+        monografia.setLinkDeclaracaoNotas(baseUrl + "declaracao_notas/visualizar");
+    }
+    if (monografia.getTermoOrientador() != null && monografia.getTermoOrientador().length > 0) {
+        monografia.setLinkTermoOrientador(baseUrl + "termo_orientador/visualizar");
+    }
+    if (monografia.getProjeto() != null && monografia.getProjeto().length > 0) {
+        monografia.setLinkProjeto(baseUrl + "projeto/visualizar");
+    }
+    if (monografia.getDocumentoBi() != null && monografia.getDocumentoBi().length > 0) {
+        monografia.setLinkDocumentoBi(baseUrl + "documento_bi/visualizar");
+    }
+}
 
     // Revisão do admin (aprovação ou solicitação de correções)
     public Monografia adminReviewMonografia(UUID monografiaId, StatusMonografia novoStatus, String descricao, UUID adminId) {

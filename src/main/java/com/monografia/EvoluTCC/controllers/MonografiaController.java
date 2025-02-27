@@ -4,6 +4,7 @@ import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
+import com.monografia.EvoluTCC.dto.MonografiaResponseDTO;
 import com.monografia.EvoluTCC.services.MonografiaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
 
 @RestController
 @RequestMapping("/monografias")
@@ -88,6 +92,70 @@ public ResponseEntity<List<Usuario>> getOrientadoresPorEspecialidade(@PathVariab
         return ResponseEntity.ok(monografia);
     }
 
+    @GetMapping("/aluno/{alunoId}")
+    public ResponseEntity<MonografiaResponseDTO> getMonografiaByAlunoId(@PathVariable UUID alunoId) {
+        MonografiaResponseDTO monografiaDTO = monografiaService.getMonografiaByAlunoId(alunoId);
+        return ResponseEntity.ok(monografiaDTO);
+    }
+
+    @GetMapping("/{id}/documentos/{tipoDocumento}/visualizar")
+public ResponseEntity<byte[]> visualizarDocumento(
+        @PathVariable UUID id,
+        @PathVariable String tipoDocumento) {
+
+    Monografia monografia = monografiaService.getMonografiaById(id);
+    byte[] documento = null;
+    String nomeArquivo = tipoDocumento + ".pdf";
+
+    switch (tipoDocumento) {
+        case "extrato_bancario":
+            documento = monografia.getExtratoBancario();
+            break;
+        case "declaracao_notas":
+            documento = monografia.getDeclaracaoNotas();
+            break;
+        case "termo_orientador":
+            documento = monografia.getTermoOrientador();
+            break;
+        case "projeto":
+            documento = monografia.getProjeto();
+            break;
+        case "documento_bi":
+            documento = monografia.getDocumentoBi();
+            break;
+        default:
+            return ResponseEntity.badRequest().build();
+    }
+
+    if (documento == null || documento.length == 0) {
+        return ResponseEntity.notFound().build();
+    }
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDispositionFormData("inline", nomeArquivo);
+
+    return ResponseEntity.ok()
+            .headers(headers)
+            .body(documento);
+}
+
+    @GetMapping("/{id}/documentos/extrato_bancario/visualizar")
+public ResponseEntity<byte[]> visualizarExtratoBancario(@PathVariable UUID id) {
+    Monografia monografia = monografiaService.getMonografiaById(id);
+
+    if (monografia.getExtratoBancario() == null || monografia.getExtratoBancario().length == 0) {
+        return ResponseEntity.notFound().build(); // Retorna 404 se o arquivo não existir
+    }
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDispositionFormData("inline", "extrato_bancario.pdf"); // "inline" para exibir no navegador
+
+    return ResponseEntity.ok()
+            .headers(headers)
+            .body(monografia.getExtratoBancario());
+}
     // Listar monografias aprovadas para revisão do Admin
     @GetMapping("/aprovadas")
     public ResponseEntity<List<Monografia>> getMonografiasAprovadas() {

@@ -61,6 +61,21 @@ public class Monografia {
     @Column(name = "data_status")
     private LocalDateTime dataStatus;
 
+    @Transient 
+    private String linkExtratoBancario;
+
+    @Transient
+    private String linkDeclaracaoNotas;
+
+    @Transient
+    private String linkTermoOrientador;
+
+    @Transient
+    private String linkProjeto;
+
+     @Transient
+     private String linkDocumentoBi;
+
     // Construtor padrão
     public Monografia() {}
 
@@ -194,5 +209,45 @@ this.dataStatus = LocalDateTime.now();
 
     public void setDataStatus(LocalDateTime dataStatus) {
         this.dataStatus = dataStatus;
+    }
+
+    public String getLinkExtratoBancario() {
+        return linkExtratoBancario;
+    }
+    
+    public void setLinkExtratoBancario(String linkExtratoBancario) {
+        this.linkExtratoBancario = linkExtratoBancario;
+    }
+    
+    public String getLinkDeclaracaoNotas() {
+        return linkDeclaracaoNotas;
+    }
+    
+    public void setLinkDeclaracaoNotas(String linkDeclaracaoNotas) {
+        this.linkDeclaracaoNotas = linkDeclaracaoNotas;
+    }
+    
+    public String getLinkTermoOrientador() {
+        return linkTermoOrientador;
+    }
+    
+    public void setLinkTermoOrientador(String linkTermoOrientador) {
+        this.linkTermoOrientador = linkTermoOrientador;
+    }
+    
+    public String getLinkProjeto() {
+        return linkProjeto;
+    }
+    
+    public void setLinkProjeto(String linkProjeto) {
+        this.linkProjeto = linkProjeto;
+    }
+    
+    public String getLinkDocumentoBi() {
+        return linkDocumentoBi;
+    }
+    
+    public void setLinkDocumentoBi(String linkDocumentoBi) {
+        this.linkDocumentoBi = linkDocumentoBi;
     }
 }
