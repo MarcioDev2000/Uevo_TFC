@@ -11,6 +11,9 @@ public class MonografiaResponseDTO {
     private String linkTermoOrientador;
     private String linkProjeto;
     private String linkDocumentoBi;
+    private String orientadorNomeCompleto; 
+    private String especialidade;
+    private String alunoNomeCompleto;
 
     // Getters e Setters
     public UUID getId() {
@@ -75,5 +78,29 @@ public class MonografiaResponseDTO {
 
     public void setLinkDocumentoBi(String linkDocumentoBi) {
         this.linkDocumentoBi = linkDocumentoBi;
+    }
+
+    public String getOrientadorNomeCompleto() {
+        return orientadorNomeCompleto;
+    }
+
+    public void setOrientadorNomeCompleto(String orientadorNomeCompleto) {
+        this.orientadorNomeCompleto = orientadorNomeCompleto;
+    }
+
+    public String getEspecialidade() {
+        return especialidade;
+    }
+
+    public void setEspecialidade(String especialidade) {
+        this.especialidade = especialidade;
+    }
+
+    public String getAlunoNomeCompleto() {
+        return alunoNomeCompleto;
+    }
+
+    public void setAlunoNomeCompleto(String alunoNomeCompleto) {
+        this.alunoNomeCompleto = alunoNomeCompleto;
     }
 }

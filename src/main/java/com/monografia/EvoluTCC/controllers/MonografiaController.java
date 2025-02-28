@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -187,4 +188,10 @@ public ResponseEntity<byte[]> visualizarExtratoBancario(@PathVariable UUID id) {
         Monografia monografia = monografiaService.getMonografiaById(id);
         return ResponseEntity.ok(monografia);
     }
+
+    @GetMapping("/aluno/{alunoId}/estatisticas")
+    public ResponseEntity<Map<String, Object>> getEstatisticasAluno(@PathVariable UUID alunoId) {
+    Map<String, Object> estatisticas = monografiaService.getEstatisticasAluno(alunoId);
+    return ResponseEntity.ok(estatisticas);
+   }
 }

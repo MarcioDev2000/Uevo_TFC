@@ -47,6 +47,12 @@ public class MonografiaService {
     public Monografia createMonografia(String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
     MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
     UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
+
+        boolean alunoJaPossuiMonografia = monografiaRepository.existsByAlunoId(alunoId);
+        if (alunoJaPossuiMonografia) {
+            throw new RuntimeException("O aluno já possui uma monografia cadastrada. Não é permitido inscrever-se novamente.");
+        }
+        
 validarDocumento(extratoBancario);
 validarDocumento(termoOrientador);
 validarDocumento(declaracaoNotas);
@@ -186,6 +192,14 @@ private MonografiaResponseDTO toDTO(Monografia monografia) {
     dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
     dto.setLinkProjeto(monografia.getLinkProjeto());
     dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+    Usuario orientador = monografia.getOrientador();
+    String nomeCompleto = orientador.getNome() + " " + orientador.getSobrenome();
+    dto.setOrientadorNomeCompleto(nomeCompleto);
+    Especialidade especialidade = monografia.getEspecialidade();
+    dto.setEspecialidade(especialidade.getNome()); 
+    Usuario aluno = monografia.getAluno();
+    String alunoNomeCompleto = aluno.getNome() + " " + aluno.getSobrenome();
+    dto.setAlunoNomeCompleto(alunoNomeCompleto);
 
     return dto;
 }
@@ -300,46 +314,47 @@ private void adicionarLinksDocumentos(Monografia monografia) {
         return monografiaRepository.findByOrientadorId(orientadorId);
     }
 
+    @Transactional
     public Map<String, Object> getEstatisticasAluno(UUID alunoId) {
-    Map<String, Object> estatisticas = new HashMap<>();
-
-    // Busca todas as monografias do aluno
-    List<Monografia> monografias = monografiaRepository.findByAlunoId(alunoId);
-
-    if (monografias.isEmpty()) {
-        throw new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId);
+        Map<String, Object> estatisticas = new HashMap<>();
+    
+        // Busca todas as monografias do aluno
+        List<Monografia> monografias = monografiaRepository.findByAlunoId(alunoId);
+    
+        if (monografias.isEmpty()) {
+            throw new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId);
+        }
+    
+        // Pega a última monografia (assumindo que o aluno tem apenas uma monografia ativa)
+        Monografia ultimaMonografia = monografias.get(monografias.size() - 1);
+    
+        // Status atual da monografia
+        estatisticas.put("statusAtual", ultimaMonografia.getStatus());
+    
+        // Tempo no status atual (em dias)
+        long diasNoStatus = calcularDiasNoStatus(ultimaMonografia);
+        estatisticas.put("diasNoStatus", diasNoStatus);
+    
+        // Número de revisões realizadas
+        long numeroRevisoes = monografias.stream()
+                .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
+                .count();
+        estatisticas.put("numeroRevisoes", numeroRevisoes);
+    
+        // Documentos pendentes
+        List<String> documentosPendentes = verificarDocumentosPendentes(ultimaMonografia);
+        estatisticas.put("documentosPendentes", documentosPendentes);
+    
+        // Tempo médio de revisão (em dias)
+        double tempoMedioRevisao = calcularTempoMedioRevisao(monografias);
+        estatisticas.put("tempoMedioRevisao", tempoMedioRevisao);
+    
+        // Chance de aprovação (exemplo simplificado)
+        double chanceAprovacao = calcularChanceAprovacao(ultimaMonografia);
+        estatisticas.put("chanceAprovacao", chanceAprovacao + "%");
+    
+        return estatisticas;
     }
-
-    // Pega a última monografia (assumindo que o aluno tem apenas uma monografia ativa)
-    Monografia ultimaMonografia = monografias.get(monografias.size() - 1);
-
-    // Status atual da monografia
-    estatisticas.put("statusAtual", ultimaMonografia.getStatus());
-
-    // Tempo no status atual (em dias)
-    long diasNoStatus = calcularDiasNoStatus(ultimaMonografia);
-    estatisticas.put("diasNoStatus", diasNoStatus);
-
-    // Número de revisões realizadas
-    long numeroRevisoes = monografias.stream()
-            .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
-            .count();
-    estatisticas.put("numeroRevisoes", numeroRevisoes);
-
-    // Documentos pendentes
-    List<String> documentosPendentes = verificarDocumentosPendentes(ultimaMonografia);
-    estatisticas.put("documentosPendentes", documentosPendentes);
-
-    // Tempo médio de revisão (em dias)
-    double tempoMedioRevisao = calcularTempoMedioRevisao(monografias);
-    estatisticas.put("tempoMedioRevisao", tempoMedioRevisao);
-
-    // Chance de aprovação (exemplo simplificado)
-    double chanceAprovacao = calcularChanceAprovacao(ultimaMonografia);
-    estatisticas.put("chanceAprovacao", chanceAprovacao + "%");
-
-    return estatisticas;
-}
 
 // Método auxiliar para calcular dias no status atual
 private long calcularDiasNoStatus(Monografia monografia) {

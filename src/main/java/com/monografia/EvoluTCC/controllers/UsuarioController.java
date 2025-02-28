@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.monografia.EvoluTCC.dto.UsuarioDTOResponse;
 import com.monografia.EvoluTCC.dto.UsuarioDto;
 import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.services.UsuarioService;
@@ -45,14 +46,15 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}/")
-    public ResponseEntity<Usuario> listarUsuarioPorId(@PathVariable UUID id) {
-        Optional<Usuario> usuario = usuarioService.listarUsuarioPorId(id);
-        if (usuario.isPresent()) {
-            return ResponseEntity.ok(usuario.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); 
-        }
+public ResponseEntity<UsuarioDTOResponse> listarUsuarioPorId(@PathVariable UUID id) {
+    Optional<Usuario> usuario = usuarioService.listarUsuarioPorId(id);
+    if (usuario.isPresent()) {
+        UsuarioDTOResponse usuarioResponse = new UsuarioDTOResponse(usuario.get());
+        return ResponseEntity.ok(usuarioResponse);
+    } else {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
+}
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarUsuario(@PathVariable UUID id) {
