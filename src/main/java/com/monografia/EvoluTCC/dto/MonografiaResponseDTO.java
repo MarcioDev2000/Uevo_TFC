@@ -14,6 +14,7 @@ public class MonografiaResponseDTO {
     private String orientadorNomeCompleto; 
     private String especialidade;
     private String alunoNomeCompleto;
+    private String descricaoMelhoria; // Novo campo
 
     // Getters e Setters
     public UUID getId() {
@@ -102,5 +103,13 @@ public class MonografiaResponseDTO {
 
     public void setAlunoNomeCompleto(String alunoNomeCompleto) {
         this.alunoNomeCompleto = alunoNomeCompleto;
+    }
+
+    public String getDescricaoMelhoria() {
+        return descricaoMelhoria;
+    }
+
+    public void setDescricaoMelhoria(String descricaoMelhoria) {
+        this.descricaoMelhoria = descricaoMelhoria;
     }
 }

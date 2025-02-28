@@ -133,7 +133,7 @@ return savedMonografia;
         return updatedMonografia;
     }
 
-    // Revisão do orientador (aprovação ou solicitação de correções)
+   
     public Monografia reviewMonografia(UUID monografiaId, StatusMonografia novoStatus, String descricao, UUID orientadorId) {
         Monografia monografia = getMonografiaById(monografiaId);
         Usuario orientador = usuarioRepository.findById(orientadorId)
@@ -169,40 +169,41 @@ return savedMonografia;
     }
 
     @Transactional
-public MonografiaResponseDTO getMonografiaByAlunoId(UUID alunoId) {
-    Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId));
+    public MonografiaResponseDTO getMonografiaByAlunoId(UUID alunoId) {
+        Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId));
+    
+        // Adiciona links para visualização dos documentos
+        adicionarLinksDocumentos(monografia);
+    
+        // Converte a entidade Monografia para o DTO
+        return toDTO(monografia);
+    }
 
-    // Adiciona links para visualização dos documentos
-    adicionarLinksDocumentos(monografia);
-
-    // Converte a entidade Monografia para o DTO
-    return toDTO(monografia);
-}
-
-private MonografiaResponseDTO toDTO(Monografia monografia) {
-    MonografiaResponseDTO dto = new MonografiaResponseDTO();
-    dto.setId(monografia.getId());
-    dto.setTema(monografia.getTema());
-    dto.setStatus(monografia.getStatus().toString()); 
-    dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
-    dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
-    dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
-    dto.setLinkProjeto(monografia.getLinkProjeto());
-    dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
-    Usuario orientador = monografia.getOrientador();
-    String nomeCompleto = orientador.getNome() + " " + orientador.getSobrenome();
-    dto.setOrientadorNomeCompleto(nomeCompleto);
-    Especialidade especialidade = monografia.getEspecialidade();
-    dto.setEspecialidade(especialidade.getNome()); 
-    Usuario aluno = monografia.getAluno();
-    String alunoNomeCompleto = aluno.getNome() + " " + aluno.getSobrenome();
-    dto.setAlunoNomeCompleto(alunoNomeCompleto);
-
-    return dto;
-}
+    private MonografiaResponseDTO toDTO(Monografia monografia) {
+        MonografiaResponseDTO dto = new MonografiaResponseDTO();
+        dto.setId(monografia.getId());
+        dto.setTema(monografia.getTema());
+        dto.setStatus(monografia.getStatus().toString());
+        dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+        dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+        dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+        dto.setLinkProjeto(monografia.getLinkProjeto());
+        dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+        dto.setDescricaoMelhoria(monografia.getDescricaoMelhoria()); // Mapeia a descrição
+        Usuario orientador = monografia.getOrientador();
+        String nomeCompleto = orientador.getNome() + " " + orientador.getSobrenome();
+        dto.setOrientadorNomeCompleto(nomeCompleto);
+        Especialidade especialidade = monografia.getEspecialidade();
+        dto.setEspecialidade(especialidade.getNome());
+        Usuario aluno = monografia.getAluno();
+        String alunoNomeCompleto = aluno.getNome() + " " + aluno.getSobrenome();
+        dto.setAlunoNomeCompleto(alunoNomeCompleto);
+    
+        return dto;
+    }
 
 private void adicionarLinksDocumentos(Monografia monografia) {
     UUID monografiaId = monografia.getId();
