@@ -326,48 +326,46 @@ private void adicionarLinksDocumentos(Monografia monografia) {
             throw new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId);
         }
     
-        // Pega a última monografia (assumindo que o aluno tem apenas uma monografia ativa)
+     
         Monografia ultimaMonografia = monografias.get(monografias.size() - 1);
     
-        // Status atual da monografia
+       
         estatisticas.put("statusAtual", ultimaMonografia.getStatus());
     
-        // Tempo no status atual (em dias)
+        
         long diasNoStatus = calcularDiasNoStatus(ultimaMonografia);
         estatisticas.put("diasNoStatus", diasNoStatus);
     
-        // Número de revisões realizadas
         long numeroRevisoes = monografias.stream()
                 .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
                 .count();
         estatisticas.put("numeroRevisoes", numeroRevisoes);
     
-        // Documentos pendentes
         List<String> documentosPendentes = verificarDocumentosPendentes(ultimaMonografia);
         estatisticas.put("documentosPendentes", documentosPendentes);
     
-        // Tempo médio de revisão (em dias)
+   
         double tempoMedioRevisao = calcularTempoMedioRevisao(monografias);
         estatisticas.put("tempoMedioRevisao", tempoMedioRevisao);
     
-        // Chance de aprovação (exemplo simplificado)
+     
         double chanceAprovacao = calcularChanceAprovacao(ultimaMonografia);
         estatisticas.put("chanceAprovacao", chanceAprovacao + "%");
     
         return estatisticas;
     }
 
-// Método auxiliar para calcular dias no status atual
+
 private long calcularDiasNoStatus(Monografia monografia) {
     if (monografia.getStatus() == StatusMonografia.PENDENTE || monografia.getStatus() == StatusMonografia.EM_REVISAO) {
         LocalDateTime dataAtual = LocalDateTime.now();
-        LocalDateTime dataStatus = monografia.getDataStatus(); // Supondo que você tenha um campo para armazenar a data do último status
+        LocalDateTime dataStatus = monografia.getDataStatus(); 
         return ChronoUnit.DAYS.between(dataStatus, dataAtual);
     }
     return 0;
 }
 
-// Método auxiliar para verificar documentos pendentes
+
 private List<String> verificarDocumentosPendentes(Monografia monografia) {
     List<String> documentosPendentes = new ArrayList<>();
     if (monografia.getExtratoBancario() == null || monografia.getExtratoBancario().length == 0) {
@@ -388,7 +386,7 @@ private List<String> verificarDocumentosPendentes(Monografia monografia) {
     return documentosPendentes;
 }
 
-// Método auxiliar para calcular o tempo médio de revisão
+
 private double calcularTempoMedioRevisao(List<Monografia> monografias) {
     return monografias.stream()
             .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
@@ -397,15 +395,71 @@ private double calcularTempoMedioRevisao(List<Monografia> monografias) {
             .orElse(0);
 }
 
-// Método auxiliar para calcular a chance de aprovação (exemplo simplificado)
+
 private double calcularChanceAprovacao(Monografia monografia) {
     if (monografia.getStatus() == StatusMonografia.APROVADO) {
         return 100.0;
     }
     if (monografia.getStatus() == StatusMonografia.EM_REVISAO) {
-        return 70.0; // Exemplo: 70% de chance se estiver em revisão
+        return 70.0; 
     }
-    return 30.0; // Exemplo: 30% de chance se estiver pendente
+    return 30.0;
+}
+
+
+@Transactional
+public Map<String, Integer> getEstatisticasStatusPorAlunoId(UUID alunoId) {
+    Map<String, Integer> estatisticas = new HashMap<>();
+    
+    // Inicializa os contadores
+    estatisticas.put("Pendente", 0);
+    estatisticas.put("Aprovado", 0);
+    estatisticas.put("Em_Revisao", 0);
+
+    // Busca a monografia do aluno
+    Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId));
+
+    // Atualiza as estatísticas com base no status atual da monografia
+    switch (monografia.getStatus()) {
+        case PENDENTE:
+            estatisticas.put("Pendente", 1);
+            break;
+        case APROVADO:
+            estatisticas.put("Aprovado", 1);
+            break;
+        case EM_REVISAO:
+            estatisticas.put("Em_Revisao", 1);
+            break;
+        default:
+            throw new RuntimeException("Status da monografia inválido: " + monografia.getStatus());
+    }
+
+    return estatisticas;
+}
+
+public Monografia entregarProjetoParaPreDefesa(UUID monografiaId, MultipartFile projeto) throws IOException {
+    Monografia monografia = getMonografiaById(monografiaId);
+
+    // Verifica se a monografia está aprovada pelo orientador
+    if (monografia.getStatus() != StatusMonografia.APROVADO) {
+        throw new RuntimeException("A monografia precisa ser aprovada pelo orientador antes de entregar o projeto para a pré-defesa.");
+    }
+
+    // Valida o documento do projeto
+    validarDocumento(projeto);
+
+    // Atualiza o projeto na monografia
+    monografia.setProjeto(projeto.getBytes());
+    monografia.setStatus(StatusMonografia.EM_PRE_DEFESA); 
+
+    return monografiaRepository.save(monografia);
+}
+
+public List<Monografia> getMonografiasEmPreDefesa() {
+    return monografiaRepository.findByStatus(StatusMonografia.EM_PRE_DEFESA);
 }
     
 }

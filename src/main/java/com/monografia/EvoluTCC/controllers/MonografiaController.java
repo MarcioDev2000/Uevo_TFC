@@ -189,9 +189,31 @@ public ResponseEntity<byte[]> visualizarExtratoBancario(@PathVariable UUID id) {
         return ResponseEntity.ok(monografia);
     }
 
+    @PostMapping("/{monografiaId}/entregar-projeto")
+public ResponseEntity<Monografia> entregarProjetoParaPreDefesa(
+        @PathVariable UUID monografiaId,
+        @RequestParam("projeto") MultipartFile projeto) throws IOException {
+
+    Monografia monografia = monografiaService.entregarProjetoParaPreDefesa(monografiaId, projeto);
+    return ResponseEntity.ok(monografia);
+}
+
+
+@GetMapping("/pre-defesa/pendentes")
+public ResponseEntity<List<Monografia>> getMonografiasEmPreDefesa() {
+    List<Monografia> monografias = monografiaService.getMonografiasEmPreDefesa();
+    return ResponseEntity.ok(monografias);
+}
+
     @GetMapping("/aluno/{alunoId}/estatisticas")
     public ResponseEntity<Map<String, Object>> getEstatisticasAluno(@PathVariable UUID alunoId) {
     Map<String, Object> estatisticas = monografiaService.getEstatisticasAluno(alunoId);
     return ResponseEntity.ok(estatisticas);
+   }
+
+   @GetMapping("/aluno/{alunoId}/estatisticas-status")
+   public ResponseEntity<Map<String, Integer>> getEstatisticasStatusPorAlunoId(@PathVariable UUID alunoId) {
+       Map<String, Integer> estatisticas = monografiaService.getEstatisticasStatusPorAlunoId(alunoId);
+       return ResponseEntity.ok(estatisticas);
    }
 }

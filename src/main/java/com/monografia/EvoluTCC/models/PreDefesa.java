@@ -18,7 +18,14 @@ public class PreDefesa {
     @JoinColumn(name = "monografia_id", nullable = false)
     private Monografia monografia;
 
-    private String projeto;
+    @Lob
+    @Column(name = "projeto", nullable = true)
+    private byte[] projeto;
+
+    @Lob
+    @Column(name = "descricao", nullable = true)
+    private String descricao;
+
 
     @Column(nullable = false)
     private LocalDateTime dataPreDefesa;
@@ -52,11 +59,11 @@ public class PreDefesa {
         this.monografia = monografia;
     }
 
-    public String getProjeto() {
+    public byte[] getProjeto() {
         return projeto;
     }
 
-    public void setProjeto(String projeto) {
+    public void setProjeto(byte[] projeto) {
         this.projeto = projeto;
     }
 
@@ -90,5 +97,13 @@ public class PreDefesa {
 
     public void setStatus(StatusDefesa status) {
         this.status = status;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 }
