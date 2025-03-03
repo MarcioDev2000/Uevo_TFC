@@ -26,7 +26,7 @@ public class OrientadorController {
     }
 
     
-    @GetMapping("/especialidade/{especialidadeId}")
+@GetMapping("/especialidade/{especialidadeId}")
 public ResponseEntity<List<Map<String, Object>>> getOrientadoresPorEspecialidade(@PathVariable UUID especialidadeId) {
     // Busca os usuários do tipo "Orientador" associados à especialidade
     List<Map<String, Object>> orientadores = usuarioRepository
@@ -41,11 +41,10 @@ public ResponseEntity<List<Map<String, Object>>> getOrientadoresPorEspecialidade
     return ResponseEntity.ok(orientadores);
 }
 
-  @GetMapping("/{orientadorId}/alunos")
+@GetMapping("/{orientadorId}/alunos")
 public List<AlunoResponseDTO> getAlunosPorOrientador(@PathVariable UUID orientadorId) {
     return monografiaService.getAlunosPorOrientador(orientadorId);
 }
 
-    
     
 }
