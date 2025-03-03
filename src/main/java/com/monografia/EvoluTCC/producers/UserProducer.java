@@ -50,20 +50,25 @@ public class UserProducer {
     }
 
     public void notifyAdmin(Monografia monografia) {
+        if (monografia.getAdmin() == null) {
+            throw new RuntimeException("Nenhum administrador associado à monografia.");
+        }
+    
         EmailDto emailDto = new EmailDto();
         emailDto.setEmailTo(monografia.getAdmin().getEmail());
-        emailDto.setSubject("Monografia Aprovada pelo Orientador");
-        emailDto.setText("Olá Admin,\n\n" +
-                         "A monografia do aluno " + monografia.getAluno().getNome() + " foi aprovada pelo orientador " +
-                         monografia.getOrientador().getNome() + ".\n\n" +
+        emailDto.setSubject("Nova Monografia Aprovada");
+        emailDto.setText("Olá " + monografia.getAdmin().getNome() + ",\n\n" +
+                         "A monografia do aluno " + monografia.getAluno().getNome() + " foi aprovada pelo orientador.\n\n" +
                          "Tema: " + monografia.getTema() + "\n" +
                          "Status: " + monografia.getStatus() + "\n\n" +
-                         "Por favor, revise a monografia e aprove ou solicite correções.\n\n" +
+                         "Por favor, revise a monografia e tome as medidas necessárias.\n\n" +
                          "Atenciosamente,\n" +
                          "Equipe Utanga");
-
+    
         rabbitTemplate.convertAndSend(queue, emailDto);
     }
+    
+  
 
     public void notifyAluno(Monografia monografia) {
         EmailDto emailDto = new EmailDto();

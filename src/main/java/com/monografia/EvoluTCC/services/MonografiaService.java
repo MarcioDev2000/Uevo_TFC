@@ -5,6 +5,7 @@ import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.producers.UserProducer;
 import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
+import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
 import com.monografia.EvoluTCC.dto.MonografiaResponseDTO;
 import com.monografia.EvoluTCC.repositories.MonografiaRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -138,36 +140,44 @@ return savedMonografia;
         Monografia monografia = getMonografiaById(monografiaId);
         Usuario orientador = usuarioRepository.findById(orientadorId)
                 .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
-
+    
         // Verifica se o usuário é realmente um Orientador
-        if (!orientador.getTipoUsuario().getNome().equals("Orientador")) {
+        if (!"Orientador".equals(orientador.getTipoUsuario().getNome())) {
             throw new RuntimeException("Apenas usuários do tipo Orientador podem revisar monografias.");
         }
-
+    
         // Verifica se o orientador tentando revisar é o mesmo selecionado pelo aluno
         if (!monografia.getOrientador().getId().equals(orientadorId)) {
             throw new RuntimeException("Apenas o orientador selecionado pelo aluno pode aprovar ou revisar esta monografia.");
         }
-
+    
         // Impede o orientador de definir diretamente como DISPONIVEL
         if (novoStatus == StatusMonografia.DISPONIVEL) {
             throw new RuntimeException("O Orientador não pode definir a monografia como DISPONIVEL.");
         }
-
+    
+        // Se a monografia estiver sendo aprovada, associamos um Admin se necessário
         if (novoStatus == StatusMonografia.APROVADO) {
             monografia.setStatus(StatusMonografia.APROVADO);
-            // Notifica o admin
+    
+            if (monografia.getAdmin() == null) {
+                List<Usuario> admins = usuarioRepository.findByTipoUsuario_Nome("Admin");
+                Usuario admin = admins.stream().findFirst()
+                        .orElseThrow(() -> new RuntimeException("Nenhum admin encontrado no sistema."));
+                monografia.setAdmin(admin);
+            }
+    
+            monografiaRepository.save(monografia);
             userProducer.notifyAdmin(monografia);
         } else if (novoStatus == StatusMonografia.EM_REVISAO) {
             monografia.setStatus(StatusMonografia.EM_REVISAO);
             monografia.setDescricaoMelhoria(descricao);
-            // Notifica o aluno sobre as correções necessárias
             userProducer.notifyAluno(monografia);
         }
-
+    
         return monografiaRepository.save(monografia);
     }
-
+    
     @Transactional
     public MonografiaResponseDTO getMonografiaByAlunoId(UUID alunoId) {
         Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
@@ -308,11 +318,49 @@ private void adicionarLinksDocumentos(Monografia monografia) {
                 .body(documento);
     }
 
-    public List<Monografia> getMonografiasPorOrientador(UUID orientadorId) {
-        if (!usuarioRepository.existsById(orientadorId)) {
-            throw new RuntimeException("Orientador não encontrado com o ID: " + orientadorId);
-        }
-        return monografiaRepository.findByOrientadorId(orientadorId);
+     public MonografiaService(MonografiaRepository monografiaRepository, UsuarioRepository usuarioRepository) {
+        this.monografiaRepository = monografiaRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
+
+    @Transactional
+public List<MonografiaResponseDTO> getMonografiasPorOrientador(UUID orientadorId) {
+    if (!usuarioRepository.existsById(orientadorId)) {
+        throw new RuntimeException("Orientador não encontrado com o ID: " + orientadorId);
+    }
+
+    List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
+
+    // Adiciona links para os documentos de cada monografia
+    monografias.forEach(this::adicionarLinksDocumentos);
+
+    // Mapeia a lista de Monografia para MonografiaResponseDTO
+    return monografias.stream()
+            .map(this::mapToMonografiaResponseDTO)
+            .collect(Collectors.toList());
+}
+
+    private MonografiaResponseDTO mapToMonografiaResponseDTO(Monografia monografia) {
+        MonografiaResponseDTO dto = new MonografiaResponseDTO();
+        dto.setId(monografia.getId());
+        dto.setTema(monografia.getTema());
+        dto.setStatus(monografia.getStatus().toString());
+        dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+        dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+        dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+        dto.setLinkProjeto(monografia.getLinkProjeto());
+        dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+        dto.setDescricaoMelhoria(monografia.getDescricaoMelhoria()); // Mapeia a descrição
+        Usuario orientador = monografia.getOrientador();
+        String nomeCompleto = orientador.getNome() + " " + orientador.getSobrenome();
+        dto.setOrientadorNomeCompleto(nomeCompleto);
+        Especialidade especialidade = monografia.getEspecialidade();
+        dto.setEspecialidade(especialidade.getNome());
+        Usuario aluno = monografia.getAluno();
+        String alunoNomeCompleto = aluno.getNome() + " " + aluno.getSobrenome();
+        dto.setAlunoNomeCompleto(alunoNomeCompleto);
+
+        return dto;
     }
 
     @Transactional
@@ -460,6 +508,68 @@ public Monografia entregarProjetoParaPreDefesa(UUID monografiaId, MultipartFile 
 
 public List<Monografia> getMonografiasEmPreDefesa() {
     return monografiaRepository.findByStatus(StatusMonografia.EM_PRE_DEFESA);
+}
+
+
+@Transactional
+public Map<String, Object> getEstatisticasPorOrientador(UUID orientadorId) {
+    // Verifica se o orientador existe
+    Usuario orientador = usuarioRepository.findById(orientadorId)
+            .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
+
+    // Verifica se o usuário é realmente um Orientador
+    if (!orientador.getTipoUsuario().getNome().equals("Orientador")) {
+        throw new RuntimeException("O usuário com ID " + orientadorId + " não é um orientador.");
+    }
+
+    // Busca todas as monografias do orientador
+    List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
+
+    // Inicializa as estatísticas
+    Map<String, Object> estatisticas = new HashMap<>();
+    estatisticas.put("orientadorNome", orientador.getNome() + " " + orientador.getSobrenome());
+    estatisticas.put("numeroAlunosOrientados", monografias.stream().map(Monografia::getAluno).distinct().count());
+
+    // Contadores para os status das monografias
+    long pendentes = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.PENDENTE).count();
+    long emRevisao = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO).count();
+    long aprovadas = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.APROVADO).count();
+
+    estatisticas.put("monografiasPendentes", pendentes);
+    estatisticas.put("monografiasEmRevisao", emRevisao);
+    estatisticas.put("monografiasAprovadas", aprovadas);
+
+    return estatisticas;
+}
+
+@Transactional
+public List<AlunoResponseDTO> getAlunosPorOrientador(UUID orientadorId) {
+    // Verifica se o orientador existe
+    if (!usuarioRepository.existsById(orientadorId)) {
+        throw new RuntimeException("Orientador não encontrado com o ID: " + orientadorId);
+    }
+
+    // Busca todas as monografias do orientador
+    List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
+
+    // Extrai os alunos únicos das monografias e mapeia para AlunoResponseDTO
+    return monografias.stream()
+            .map(Monografia::getAluno)
+            .distinct()
+            .map(this::mapToAlunoResponseDTO)
+            .collect(Collectors.toList());
+}
+
+private AlunoResponseDTO mapToAlunoResponseDTO(Usuario aluno) {
+    AlunoResponseDTO dto = new AlunoResponseDTO();
+    dto.setNome(aluno.getNome());
+    dto.setSobrenome(aluno.getSobrenome());
+    dto.setEndereco(aluno.getEndereco());
+    dto.setTelefone(aluno.getTelefone());
+    dto.setEmail(aluno.getEmail());
+    dto.setNif(aluno.getNif());
+    dto.setMatricula(aluno.getMatricula());
+    return dto;
 }
     
 }

@@ -1,5 +1,9 @@
 package com.monografia.EvoluTCC.controllers;
+import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
+import com.monografia.EvoluTCC.services.MonografiaService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +17,9 @@ import java.util.stream.Collectors;
 public class OrientadorController {
 
     private final UsuarioRepository usuarioRepository;
+
+     @Autowired
+    private MonografiaService monografiaService;
 
     public OrientadorController(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
@@ -32,6 +39,11 @@ public ResponseEntity<List<Map<String, Object>>> getOrientadoresPorEspecialidade
             .collect(Collectors.toList());
 
     return ResponseEntity.ok(orientadores);
+}
+
+  @GetMapping("/{orientadorId}/alunos")
+public List<AlunoResponseDTO> getAlunosPorOrientador(@PathVariable UUID orientadorId) {
+    return monografiaService.getAlunosPorOrientador(orientadorId);
 }
 
     

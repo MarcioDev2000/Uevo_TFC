@@ -17,7 +17,6 @@ import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
-
 @RestController
 @RequestMapping("/monografias")
 public class MonografiaController {
@@ -177,10 +176,11 @@ public ResponseEntity<byte[]> visualizarExtratoBancario(@PathVariable UUID id) {
 
     // Listar monografias de um orientador específico
     @GetMapping("/orientador/{orientadorId}")
-    public ResponseEntity<List<Monografia>> getMonografiasPorOrientador(@PathVariable UUID orientadorId) {
-        List<Monografia> monografias = monografiaService.getMonografiasPorOrientador(orientadorId);
+    public ResponseEntity<List<MonografiaResponseDTO>> getMonografiasPorOrientador(@PathVariable UUID orientadorId) {
+        List<MonografiaResponseDTO> monografias = monografiaService.getMonografiasPorOrientador(orientadorId);
         return ResponseEntity.ok(monografias);
     }
+    
 
     // Obter detalhes de uma monografia pelo ID
     @GetMapping("/{id}")
@@ -216,4 +216,10 @@ public ResponseEntity<List<Monografia>> getMonografiasEmPreDefesa() {
        Map<String, Integer> estatisticas = monografiaService.getEstatisticasStatusPorAlunoId(alunoId);
        return ResponseEntity.ok(estatisticas);
    }
+
+   @GetMapping("/orientador/{orientadorId}/estatisticas")
+    public ResponseEntity<Map<String, Object>> getEstatisticasPorOrientador(@PathVariable UUID orientadorId) {
+        Map<String, Object> estatisticas = monografiaService.getEstatisticasPorOrientador(orientadorId);
+        return ResponseEntity.ok(estatisticas);
+    }
 }
