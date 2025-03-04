@@ -222,4 +222,13 @@ public ResponseEntity<List<Monografia>> getMonografiasEmPreDefesa() {
         Map<String, Object> estatisticas = monografiaService.getEstatisticasPorOrientador(orientadorId);
         return ResponseEntity.ok(estatisticas);
     }
+
+    @GetMapping("/orientador/{orientadorId}/monografias/{monografiaId}")
+public ResponseEntity<MonografiaResponseDTO> getMonografiaByOrientadorId(
+        @PathVariable UUID orientadorId,
+        @PathVariable UUID monografiaId) {
+
+    MonografiaResponseDTO monografia = monografiaService.getMonografiaByOrientadorId(orientadorId, monografiaId);
+    return ResponseEntity.ok(monografia);
+}
 }

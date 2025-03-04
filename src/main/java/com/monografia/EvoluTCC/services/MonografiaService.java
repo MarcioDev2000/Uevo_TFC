@@ -571,5 +571,34 @@ private AlunoResponseDTO mapToAlunoResponseDTO(Usuario aluno) {
     dto.setMatricula(aluno.getMatricula());
     return dto;
 }
+
+
+@Transactional
+public MonografiaResponseDTO getMonografiaByOrientadorId(UUID orientadorId, UUID monografiaId) {
+    // Verifica se o orientador existe
+    Usuario orientador = usuarioRepository.findById(orientadorId)
+            .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
+
+    // Verifica se o usuário é realmente um Orientador
+    if (!"Orientador".equals(orientador.getTipoUsuario().getNome())) {
+        throw new RuntimeException("O usuário com ID " + orientadorId + " não é um orientador.");
+    }
+
+    // Busca a monografia pelo ID e verifica se pertence ao orientador
+    Monografia monografia = monografiaRepository.findById(monografiaId)
+            .orElseThrow(() -> new RuntimeException("Monografia não encontrada com o ID: " + monografiaId));
+
+    if (!monografia.getOrientador().getId().equals(orientadorId)) {
+        throw new RuntimeException("A monografia não pertence ao orientador com ID: " + orientadorId);
+    }
+
+    // Adiciona links para os documentos da monografia
+    adicionarLinksDocumentos(monografia);
+
+    // Converte a entidade Monografia para o DTO
+    return toDTO(monografia);
+}
+
+
     
 }
