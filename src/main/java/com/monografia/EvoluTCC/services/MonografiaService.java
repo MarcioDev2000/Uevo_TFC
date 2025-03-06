@@ -47,6 +47,7 @@ public class MonografiaService {
 
     public Monografia createMonografia(String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
                                   MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
+                                  MultipartFile termoDoAluno,
                                   UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
 
     // Verifica se o aluno já possui uma monografia cadastrada
@@ -73,6 +74,7 @@ public class MonografiaService {
     validarDocumento(declaracaoNotas);
     validarDocumento(projeto);
     validarDocumento(documentoBi);
+    validarDocumento(termoDoAluno);
 
     // Busca o aluno
     Usuario aluno = usuarioRepository.findById(alunoId)
@@ -98,6 +100,7 @@ public class MonografiaService {
     monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
     monografia.setProjeto(projeto.getBytes());
     monografia.setDocumentoBi(documentoBi.getBytes());
+    monografia.setTermoDoAluno(termoDoAluno.getBytes()); 
     monografia.setStatus(StatusMonografia.PENDENTE);
     monografia.setAluno(aluno);
     monografia.setOrientador(orientador);
@@ -114,7 +117,7 @@ public class MonografiaService {
 
     // Atualiza a monografia com correções do aluno
     public Monografia updateMonografia(UUID id, String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
-                                      MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi) throws IOException {
+                                      MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi, MultipartFile termoDoAluno) throws IOException {
         Monografia monografia = getMonografiaById(id);
         if (tema != null) monografia.setTema(tema);
         if (extratoBancario != null && !extratoBancario.isEmpty()) {
@@ -136,6 +139,10 @@ public class MonografiaService {
         if (documentoBi != null && !documentoBi.isEmpty()) {
             validarDocumento(documentoBi);
             monografia.setDocumentoBi(documentoBi.getBytes());
+        }
+        if (termoDoAluno != null && !termoDoAluno.isEmpty()) {
+            validarDocumento(termoDoAluno);
+            monografia.setTermoDoAluno(termoDoAluno.getBytes());
         }
 
         // Altera o status para PENDENTE após correções
@@ -215,6 +222,7 @@ public class MonografiaService {
         dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
         dto.setLinkProjeto(monografia.getLinkProjeto());
         dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+        dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
         dto.setDescricaoMelhoria(monografia.getDescricaoMelhoria()); // Mapeia a descrição
         Usuario orientador = monografia.getOrientador();
         String nomeCompleto = orientador.getNome() + " " + orientador.getSobrenome();
@@ -246,6 +254,10 @@ private void adicionarLinksDocumentos(Monografia monografia) {
     }
     if (monografia.getDocumentoBi() != null && monografia.getDocumentoBi().length > 0) {
         monografia.setLinkDocumentoBi(baseUrl + "documento_bi/visualizar");
+    }
+
+    if (monografia.getTermoDoAluno() != null && monografia.getTermoDoAluno().length > 0) {
+        monografia.setLinkTermoDoAluno(baseUrl + "termo_do_aluno/visualizar");
     }
 }
 
@@ -313,6 +325,7 @@ private void adicionarLinksDocumentos(Monografia monografia) {
             case "declaracao_notas": documento = monografia.getDeclaracaoNotas(); break;
             case "projeto": documento = monografia.getProjeto(); break;
             case "documento_bi": documento = monografia.getDocumentoBi(); break;
+            case "termo_do_aluno": documento = monografia.getTermoDoAluno(); break;
             default: throw new IllegalArgumentException("Tipo de documento inválido: " + tipoDocumento);
         }
 

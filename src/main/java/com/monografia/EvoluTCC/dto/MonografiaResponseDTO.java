@@ -11,6 +11,7 @@ public class MonografiaResponseDTO {
     private String linkTermoOrientador;
     private String linkProjeto;
     private String linkDocumentoBi;
+    private String linkTermoDoAluno;
     private String orientadorNomeCompleto; 
     private String especialidade;
     private String alunoNomeCompleto;
@@ -111,5 +112,13 @@ public class MonografiaResponseDTO {
 
     public void setDescricaoMelhoria(String descricaoMelhoria) {
         this.descricaoMelhoria = descricaoMelhoria;
+    }
+
+    public String getLinkTermoDoAluno() {
+        return linkTermoDoAluno;
+    }
+
+    public void setLinkTermoDoAluno(String linkTermoDoAluno) {
+        this.linkTermoDoAluno = linkTermoDoAluno;
     }
 }

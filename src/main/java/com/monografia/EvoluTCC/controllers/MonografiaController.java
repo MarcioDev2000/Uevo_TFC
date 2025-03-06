@@ -39,11 +39,13 @@ public ResponseEntity<Monografia> createMonografia(
         @RequestParam("termoOrientador") MultipartFile termoOrientador,
         @RequestParam("projeto") MultipartFile projeto,
         @RequestParam("documentoBi") MultipartFile documentoBi,
+        @RequestParam("termoDoAluno") MultipartFile termoDoAluno, 
         @RequestParam("alunoId") UUID alunoId) throws IOException {
 
     Monografia monografia = monografiaService.createMonografia(
             tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi,
-            alunoId, orientadorId, especialidadeId);
+            termoDoAluno, alunoId, orientadorId, especialidadeId);
+
 
     return ResponseEntity.ok(monografia);
 }
@@ -57,10 +59,14 @@ public ResponseEntity<Monografia> createMonografia(
             @RequestParam(value = "termoOrientador", required = false) MultipartFile termoOrientador,
             @RequestParam(value = "declaracaoNotas", required = false) MultipartFile declaracaoNotas,
             @RequestParam(value = "projeto", required = false) MultipartFile projeto,
-            @RequestParam(value = "documentoBi", required = false) MultipartFile documentoBi) throws IOException {
+            @RequestParam(value = "documentoBi", required = false) MultipartFile documentoBi,
+            @RequestParam(value = "termoDoAluno", required = false) MultipartFile termoDoAluno) throws IOException {
 
-        Monografia monografia = monografiaService.updateMonografia(id, tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi);
-        return ResponseEntity.ok(monografia);
+       
+    Monografia monografia = monografiaService.updateMonografia(
+        id, tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi, termoDoAluno);
+
+return ResponseEntity.ok(monografia);
     }
 
     @GetMapping("/orientadores/{especialidadeId}")
@@ -123,6 +129,9 @@ public ResponseEntity<byte[]> visualizarDocumento(
             break;
         case "documento_bi":
             documento = monografia.getDocumentoBi();
+            break;
+        case "termo_do_aluno": 
+            documento = monografia.getTermoDoAluno();
             break;
         default:
             return ResponseEntity.badRequest().build();

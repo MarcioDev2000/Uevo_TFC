@@ -52,6 +52,10 @@ public class Monografia {
     @Column(name = "documento_bi", nullable = true)
     private byte[] documentoBi;
 
+    @Lob
+    @Column(name = "termo_do_aluno", nullable = true)
+    private byte[] termoDoAluno;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusMonografia status;
@@ -76,12 +80,15 @@ public class Monografia {
      @Transient
      private String linkDocumentoBi;
 
+     @Transient
+     private String linkTermoDoAluno;
+
     // Construtor padrão
     public Monografia() {}
 
     public Monografia(Usuario aluno, Usuario admin, Usuario orientador, Especialidade especialidade, String tema,
     byte[] extratoBancario, byte[] declaracaoNotas, byte[] termoOrientador, byte[] projeto,
-    byte[] documentoBi, StatusMonografia status, String descricaoMelhoria) {
+    byte[] documentoBi, byte[] termoDoAluno, StatusMonografia status, String descricaoMelhoria) {
 this.aluno = aluno;
 this.admin = admin;
 this.orientador = orientador;
@@ -92,6 +99,7 @@ this.declaracaoNotas = declaracaoNotas;
 this.termoOrientador = termoOrientador;
 this.projeto = projeto;
 this.documentoBi = documentoBi;
+this.termoDoAluno = termoDoAluno;
 this.status = status;
 this.descricaoMelhoria = descricaoMelhoria;
 this.dataStatus = LocalDateTime.now();
@@ -250,4 +258,21 @@ this.dataStatus = LocalDateTime.now();
     public void setLinkDocumentoBi(String linkDocumentoBi) {
         this.linkDocumentoBi = linkDocumentoBi;
     }
+
+    public byte[] getTermoDoAluno() {
+        return termoDoAluno;
+    }
+
+    public void setTermoDoAluno(byte[] termoDoAluno) {
+        this.termoDoAluno = termoDoAluno;
+    }
+
+    public String getLinkTermoDoAluno() {
+        return linkTermoDoAluno;
+    }
+
+    public void setLinkTermoDoAluno(String linkTermoDoAluno) {
+        this.linkTermoDoAluno = linkTermoDoAluno;
+    }
+
 }
