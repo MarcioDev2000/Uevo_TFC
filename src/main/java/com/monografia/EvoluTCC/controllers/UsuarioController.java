@@ -67,4 +67,30 @@ public ResponseEntity<UsuarioDTOResponse> listarUsuarioPorId(@PathVariable UUID 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao deletar usuário.");
         }
     }
+
+    @GetMapping("/alunos")
+    public ResponseEntity<List<UsuarioDTOResponse>> listarTodosAlunos(@RequestParam UUID adminId) {
+        try {
+            List<UsuarioDTOResponse> alunos = usuarioService.listarTodosAlunos(adminId);
+            return ResponseEntity.ok(alunos);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/orientadores")
+public ResponseEntity<List<UsuarioDTOResponse>> listarTodosOrientadores(@RequestParam UUID adminId) {
+    try {
+        List<UsuarioDTOResponse> orientadores = usuarioService.listarTodosOrientadores(adminId);
+        return ResponseEntity.ok(orientadores);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
+
+    
 }

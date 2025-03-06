@@ -19,8 +19,9 @@ public class PreDefesa {
     private Monografia monografia;
 
     @Lob
-    @Column(name = "projeto", nullable = true)
+    @Column(name = "projeto", columnDefinition = "BYTEA", nullable = true)
     private byte[] projeto;
+
 
     @Lob
     @Column(name = "descricao", nullable = true)

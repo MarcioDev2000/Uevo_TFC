@@ -2,6 +2,7 @@ package com.monografia.EvoluTCC.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.monografia.EvoluTCC.models.TipoUsuario;
 import com.monografia.EvoluTCC.models.Usuario;
 
 import java.util.List;
@@ -15,4 +16,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     boolean existsByEmail(String email);
     List<Usuario> findByEspecialidadeIdAndTipoUsuarioNome(UUID especialidadeId, String tipoUsuarioNome);
     List<Usuario> findByTipoUsuario_Nome(String nome);
+    long countByTipoUsuarioNome(String nome);
+    List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);
+    
 }

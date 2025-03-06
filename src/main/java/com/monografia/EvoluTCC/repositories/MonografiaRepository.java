@@ -44,4 +44,10 @@ public interface MonografiaRepository extends JpaRepository<Monografia, UUID> {
 
     // Verificar se existe monografia para um aluno (garantindo que só há uma definição)
     boolean existsByAlunoId(UUID alunoId); 
+
+    boolean existsByAlunoIdAndOrientadorIdNot(UUID alunoId, UUID orientadorId);
+
+    long countByStatus(StatusMonografia status);
+
+    long countByOrientadorId(UUID orientadorId);
 }

@@ -6,5 +6,4 @@ public enum StatusMonografia {
     APROVADO, 
     DISPONIVEL,
     EM_PRE_DEFESA,
-    OUTRO_STATUS
 }

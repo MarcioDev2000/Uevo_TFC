@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 @RestController
@@ -156,12 +157,7 @@ public ResponseEntity<byte[]> visualizarExtratoBancario(@PathVariable UUID id) {
             .headers(headers)
             .body(monografia.getExtratoBancario());
 }
-    // Listar monografias aprovadas para revisão do Admin
-    @GetMapping("/aprovadas")
-    public ResponseEntity<List<Monografia>> getMonografiasAprovadas() {
-        List<Monografia> monografias = monografiaService.getMonografiasAprovadas();
-        return ResponseEntity.ok(monografias);
-    }
+ 
 
     // Baixar ou visualizar documentos da monografia
     @GetMapping("/{monografiaId}/documento")
@@ -180,7 +176,24 @@ public ResponseEntity<byte[]> visualizarExtratoBancario(@PathVariable UUID id) {
         List<MonografiaResponseDTO> monografias = monografiaService.getMonografiasPorOrientador(orientadorId);
         return ResponseEntity.ok(monografias);
     }
+
+    @GetMapping("/admin/estatisticas")
+    public ResponseEntity<Map<String, Object>> getEstatisticasAdmin(@RequestParam UUID adminId) {
+        Map<String, Object> estatisticas = monografiaService.getEstatisticasAdmin(adminId);
+        return ResponseEntity.ok(estatisticas);
+    }
     
+    @GetMapping("/aprovadas")
+public ResponseEntity<List<MonografiaResponseDTO>> listarMonografiasAprovadasPorAdmin(@RequestParam UUID adminId) {
+    try {
+        List<MonografiaResponseDTO> monografiasAprovadas = monografiaService.listarMonografiasAprovadasPorAdmin(adminId);
+        return ResponseEntity.ok(monografiasAprovadas);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
 
     // Obter detalhes de uma monografia pelo ID
     @GetMapping("/{id}")
@@ -230,5 +243,5 @@ public ResponseEntity<MonografiaResponseDTO> getMonografiaByOrientadorId(
 
     MonografiaResponseDTO monografia = monografiaService.getMonografiaByOrientadorId(orientadorId, monografiaId);
     return ResponseEntity.ok(monografia);
-}
+  }
 }

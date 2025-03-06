@@ -45,58 +45,71 @@ public class MonografiaService {
     @Autowired
     private UserProducer userProducer;
 
-    // Cria uma nova monografia com status PENDENTE
     public Monografia createMonografia(String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
-    MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
-    UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
+                                  MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
+                                  UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
 
-        boolean alunoJaPossuiMonografia = monografiaRepository.existsByAlunoId(alunoId);
-        if (alunoJaPossuiMonografia) {
-            throw new RuntimeException("O aluno já possui uma monografia cadastrada. Não é permitido inscrever-se novamente.");
-        }
-        
-validarDocumento(extratoBancario);
-validarDocumento(termoOrientador);
-validarDocumento(declaracaoNotas);
-validarDocumento(projeto);
-validarDocumento(documentoBi);
+    // Verifica se o aluno já possui uma monografia cadastrada
+    boolean alunoJaPossuiMonografia = monografiaRepository.existsByAlunoId(alunoId);
+    if (alunoJaPossuiMonografia) {
+        throw new RuntimeException("O aluno já possui uma monografia cadastrada. Não é permitido inscrever-se novamente.");
+    }
 
-// Busca o aluno
-Usuario aluno = usuarioRepository.findById(alunoId)
-.orElseThrow(() -> new RuntimeException("Aluno não encontrado com o ID: " + alunoId));
+    // Verifica se o aluno já está associado a outro orientador
+    boolean alunoJaTemOrientador = monografiaRepository.existsByAlunoIdAndOrientadorIdNot(alunoId, orientadorId);
+    if (alunoJaTemOrientador) {
+        throw new RuntimeException("O aluno já está associado a outro orientador. Não é permitido alterar o orientador.");
+    }
 
-// Busca o orientador e valida se ele pertence à especialidade escolhida
-Usuario orientador = usuarioRepository.findById(orientadorId)
-.orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
+    long alunosOrientados = monografiaRepository.countByOrientadorId(orientadorId);
+    if (alunosOrientados >= 10) {
+        throw new RuntimeException("O orientador já atingiu o limite de 10 alunos. Escolha outro orientador.");
+    }
 
-if (!orientador.getEspecialidade().getId().equals(especialidadeId)) {
-throw new RuntimeException("O orientador selecionado não pertence à especialidade escolhida.");
-}
 
-// Busca a especialidade
-Especialidade especialidade = especialidadeRepository.findById(especialidadeId)
-.orElseThrow(() -> new RuntimeException("Especialidade não encontrada com o ID: " + especialidadeId));
+    // Valida os documentos
+    validarDocumento(extratoBancario);
+    validarDocumento(termoOrientador);
+    validarDocumento(declaracaoNotas);
+    validarDocumento(projeto);
+    validarDocumento(documentoBi);
 
-// Cria a monografia
-Monografia monografia = new Monografia();
-monografia.setTema(tema);
-monografia.setExtratoBancario(extratoBancario.getBytes());
-monografia.setTermoOrientador(termoOrientador.getBytes());
-monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
-monografia.setProjeto(projeto.getBytes());
-monografia.setDocumentoBi(documentoBi.getBytes());
-monografia.setStatus(StatusMonografia.PENDENTE);
-monografia.setAluno(aluno);
-monografia.setOrientador(orientador);
-monografia.setEspecialidade(especialidade);
-monografia.setDataStatus(LocalDateTime.now());
+    // Busca o aluno
+    Usuario aluno = usuarioRepository.findById(alunoId)
+            .orElseThrow(() -> new RuntimeException("Aluno não encontrado com o ID: " + alunoId));
 
-Monografia savedMonografia = monografiaRepository.save(monografia);
+    // Busca o orientador e valida se ele pertence à especialidade escolhida
+    Usuario orientador = usuarioRepository.findById(orientadorId)
+            .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
 
-// Notifica o orientador
-userProducer.notifyOrientador(savedMonografia);
+    if (!orientador.getEspecialidade().getId().equals(especialidadeId)) {
+        throw new RuntimeException("O orientador selecionado não pertence à especialidade escolhida.");
+    }
 
-return savedMonografia;
+    // Busca a especialidade
+    Especialidade especialidade = especialidadeRepository.findById(especialidadeId)
+            .orElseThrow(() -> new RuntimeException("Especialidade não encontrada com o ID: " + especialidadeId));
+
+    // Cria a monografia
+    Monografia monografia = new Monografia();
+    monografia.setTema(tema);
+    monografia.setExtratoBancario(extratoBancario.getBytes());
+    monografia.setTermoOrientador(termoOrientador.getBytes());
+    monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
+    monografia.setProjeto(projeto.getBytes());
+    monografia.setDocumentoBi(documentoBi.getBytes());
+    monografia.setStatus(StatusMonografia.PENDENTE);
+    monografia.setAluno(aluno);
+    monografia.setOrientador(orientador);
+    monografia.setEspecialidade(especialidade);
+    monografia.setDataStatus(LocalDateTime.now());
+
+    Monografia savedMonografia = monografiaRepository.save(monografia);
+
+    // Notifica o orientador
+    userProducer.notifyOrientador(savedMonografia);
+
+    return savedMonografia;
 }
 
     // Atualiza a monografia com correções do aluno
@@ -316,7 +329,7 @@ private void adicionarLinksDocumentos(Monografia monografia) {
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition + "; filename=" + nomeArquivo)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(documento);
-    }
+}
 
      public MonografiaService(MonografiaRepository monografiaRepository, UsuarioRepository usuarioRepository) {
         this.monografiaRepository = monografiaRepository;
@@ -513,24 +526,22 @@ public List<Monografia> getMonografiasEmPreDefesa() {
 
 @Transactional
 public Map<String, Object> getEstatisticasPorOrientador(UUID orientadorId) {
-    // Verifica se o orientador existe
+ 
     Usuario orientador = usuarioRepository.findById(orientadorId)
             .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
 
-    // Verifica se o usuário é realmente um Orientador
     if (!orientador.getTipoUsuario().getNome().equals("Orientador")) {
         throw new RuntimeException("O usuário com ID " + orientadorId + " não é um orientador.");
     }
 
-    // Busca todas as monografias do orientador
     List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
 
-    // Inicializa as estatísticas
+   
     Map<String, Object> estatisticas = new HashMap<>();
     estatisticas.put("orientadorNome", orientador.getNome() + " " + orientador.getSobrenome());
     estatisticas.put("numeroAlunosOrientados", monografias.stream().map(Monografia::getAluno).distinct().count());
 
-    // Contadores para os status das monografias
+
     long pendentes = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.PENDENTE).count();
     long emRevisao = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO).count();
     long aprovadas = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.APROVADO).count();
@@ -544,15 +555,14 @@ public Map<String, Object> getEstatisticasPorOrientador(UUID orientadorId) {
 
 @Transactional
 public List<AlunoResponseDTO> getAlunosPorOrientador(UUID orientadorId) {
-    // Verifica se o orientador existe
+
     if (!usuarioRepository.existsById(orientadorId)) {
         throw new RuntimeException("Orientador não encontrado com o ID: " + orientadorId);
     }
 
-    // Busca todas as monografias do orientador
     List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
 
-    // Extrai os alunos únicos das monografias e mapeia para AlunoResponseDTO
+  
     return monografias.stream()
             .map(Monografia::getAluno)
             .distinct()
@@ -592,13 +602,66 @@ public MonografiaResponseDTO getMonografiaByOrientadorId(UUID orientadorId, UUID
         throw new RuntimeException("A monografia não pertence ao orientador com ID: " + orientadorId);
     }
 
-    // Adiciona links para os documentos da monografia
     adicionarLinksDocumentos(monografia);
 
-    // Converte a entidade Monografia para o DTO
     return toDTO(monografia);
 }
 
+
+@Transactional
+public Map<String, Object> getEstatisticasAdmin(UUID adminId) {
+    // Verifica se o admin existe
+    Usuario admin = usuarioRepository.findById(adminId)
+            .orElseThrow(() -> new RuntimeException("Admin não encontrado com o ID: " + adminId));
+
+    // Verifica se o usuário é realmente um Admin
+    if (!"Admin".equals(admin.getTipoUsuario().getNome())) {
+        throw new RuntimeException("O usuário com ID " + adminId + " não é um admin.");
+    }
+
+    Map<String, Object> estatisticas = new HashMap<>();
+
+    // Total de usuários do tipo Aluno
+    long totalAlunos = usuarioRepository.countByTipoUsuarioNome("Aluno");
+    estatisticas.put("totalAlunos", totalAlunos);
+
+    // Total de usuários do tipo Orientador
+    long totalOrientadores = usuarioRepository.countByTipoUsuarioNome("Orientador");
+    estatisticas.put("totalOrientadores", totalOrientadores);
+
+    // Total de monografias aprovadas
+    long totalMonografiasAprovadas = monografiaRepository.countByStatus(StatusMonografia.APROVADO);
+    estatisticas.put("totalMonografiasAprovadas", totalMonografiasAprovadas);
+
+    // Total de monografias em revisão
+    long totalMonografiasEmRevisao = monografiaRepository.countByStatus(StatusMonografia.EM_REVISAO);
+    estatisticas.put("totalMonografiasEmRevisao", totalMonografiasEmRevisao);
+
+    return estatisticas;
+}
+
+@Transactional
+public List<MonografiaResponseDTO> listarMonografiasAprovadasPorAdmin(UUID adminId) {
+    // Verifica se o admin existe
+    Usuario admin = usuarioRepository.findById(adminId)
+            .orElseThrow(() -> new RuntimeException("Admin não encontrado com o ID: " + adminId));
+
+    // Verifica se o usuário é realmente um Admin
+    if (!"Admin".equals(admin.getTipoUsuario().getNome())) {
+        throw new RuntimeException("O usuário com ID " + adminId + " não é um admin.");
+    }
+
+    // Busca todas as monografias aprovadas
+    List<Monografia> monografiasAprovadas = monografiaRepository.findByStatus(StatusMonografia.APROVADO);
+
+    // Adiciona links para os documentos de cada monografia
+    monografiasAprovadas.forEach(this::adicionarLinksDocumentos);
+
+    // Mapeia a lista de Monografia para MonografiaResponseDTO
+    return monografiasAprovadas.stream()
+            .map(this::mapToMonografiaResponseDTO)
+            .collect(Collectors.toList());
+}
 
     
 }
