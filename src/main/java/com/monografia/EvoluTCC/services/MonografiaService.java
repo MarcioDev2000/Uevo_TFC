@@ -676,5 +676,32 @@ public List<MonografiaResponseDTO> listarMonografiasAprovadasPorAdmin(UUID admin
             .collect(Collectors.toList());
 }
 
+@Transactional
+public MonografiaResponseDTO getMonografiaAprovadaPorAdmin(UUID adminId, UUID monografiaId) {
+    // Verifica se o admin existe
+    Usuario admin = usuarioRepository.findById(adminId)
+            .orElseThrow(() -> new RuntimeException("Admin não encontrado com o ID: " + adminId));
+
+    // Verifica se o usuário é realmente um Admin
+    if (!"Admin".equals(admin.getTipoUsuario().getNome())) {
+        throw new RuntimeException("O usuário com ID " + adminId + " não é um admin.");
+    }
+
+    // Busca a monografia pelo ID
+    Monografia monografia = monografiaRepository.findById(monografiaId)
+            .orElseThrow(() -> new RuntimeException("Monografia não encontrada com o ID: " + monografiaId));
+
+    // Verifica se a monografia está aprovada
+    if (monografia.getStatus() != StatusMonografia.APROVADO) {
+        throw new RuntimeException("A monografia com ID " + monografiaId + " não está aprovada.");
+    }
+
+    // Adiciona links para os documentos da monografia
+    adicionarLinksDocumentos(monografia);
+
+    // Converte a entidade Monografia para o DTO
+    return mapToMonografiaResponseDTO(monografia);
+}
+
     
 }

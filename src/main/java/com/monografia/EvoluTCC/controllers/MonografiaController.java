@@ -204,6 +204,14 @@ public ResponseEntity<List<MonografiaResponseDTO>> listarMonografiasAprovadasPor
     }
 }
 
+@GetMapping("/aprovadas/{adminId}/{monografiaId}")
+    public ResponseEntity<MonografiaResponseDTO> getMonografiaAprovadaPorAdmin(
+            @PathVariable UUID adminId,
+            @PathVariable UUID monografiaId) {
+        MonografiaResponseDTO monografiaDTO = monografiaService.getMonografiaAprovadaPorAdmin(adminId, monografiaId);
+        return ResponseEntity.ok(monografiaDTO);
+    }
+
     // Obter detalhes de uma monografia pelo ID
     @GetMapping("/{id}")
     public ResponseEntity<Monografia> getMonografiaById(@PathVariable UUID id) {
