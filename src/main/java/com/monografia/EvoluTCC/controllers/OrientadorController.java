@@ -2,7 +2,6 @@ package com.monografia.EvoluTCC.controllers;
 import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 import com.monografia.EvoluTCC.services.MonografiaService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

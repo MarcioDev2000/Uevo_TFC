@@ -1,16 +1,18 @@
 package com.monografia.EvoluTCC.dto;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.monografia.EvoluTCC.Enums.StatusDefesa;
 
 public class PreDefesaDTO {
-    
+
     private UUID id;
     private UUID monografiaId;
-    private String projeto;
+    private String temaMonografia; 
     private String descricao;
-    private LocalDateTime dataPreDefesa;
+    private LocalDateTime dataInicio;
+    private LocalDateTime dataFim; 
     private UUID presidenteId;
     private UUID vogalId;
     private StatusDefesa status;
@@ -32,12 +34,12 @@ public class PreDefesaDTO {
         this.monografiaId = monografiaId;
     }
 
-    public String getProjeto() {
-        return projeto;
+    public String getTemaMonografia() {
+        return temaMonografia;
     }
 
-    public void setProjeto(String projeto) {
-        this.projeto = projeto;
+    public void setTemaMonografia(String temaMonografia) {
+        this.temaMonografia = temaMonografia;
     }
 
     public String getDescricao() {
@@ -48,12 +50,20 @@ public class PreDefesaDTO {
         this.descricao = descricao;
     }
 
-    public LocalDateTime getDataPreDefesa() {
-        return dataPreDefesa;
+    public LocalDateTime getDataInicio() {
+        return dataInicio;
     }
 
-    public void setDataPreDefesa(LocalDateTime dataPreDefesa) {
-        this.dataPreDefesa = dataPreDefesa;
+    public void setDataInicio(LocalDateTime dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public LocalDateTime getDataFim() {
+        return dataFim;
+    }
+
+    public void setDataFim(LocalDateTime dataFim) {
+        this.dataFim = dataFim;
     }
 
     public UUID getPresidenteId() {

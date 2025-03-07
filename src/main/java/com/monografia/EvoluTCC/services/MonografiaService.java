@@ -390,55 +390,63 @@ public List<MonografiaResponseDTO> getMonografiasPorOrientador(UUID orientadorId
     }
 
     @Transactional
-    public Map<String, Object> getEstatisticasAluno(UUID alunoId) {
-        Map<String, Object> estatisticas = new HashMap<>();
-    
-        // Busca todas as monografias do aluno
-        List<Monografia> monografias = monografiaRepository.findByAlunoId(alunoId);
-    
-        if (monografias.isEmpty()) {
-            throw new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId);
-        }
-    
-     
-        Monografia ultimaMonografia = monografias.get(monografias.size() - 1);
-    
-       
-        estatisticas.put("statusAtual", ultimaMonografia.getStatus());
-    
-        
-        long diasNoStatus = calcularDiasNoStatus(ultimaMonografia);
-        estatisticas.put("diasNoStatus", diasNoStatus);
-    
-        long numeroRevisoes = monografias.stream()
-                .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
-                .count();
-        estatisticas.put("numeroRevisoes", numeroRevisoes);
-    
-        List<String> documentosPendentes = verificarDocumentosPendentes(ultimaMonografia);
-        estatisticas.put("documentosPendentes", documentosPendentes);
-    
-   
-        double tempoMedioRevisao = calcularTempoMedioRevisao(monografias);
-        estatisticas.put("tempoMedioRevisao", tempoMedioRevisao);
-    
-     
-        double chanceAprovacao = calcularChanceAprovacao(ultimaMonografia);
-        estatisticas.put("chanceAprovacao", chanceAprovacao + "%");
-    
-        return estatisticas;
+public Map<String, Object> getEstatisticasAluno(UUID alunoId) {
+    Map<String, Object> estatisticas = new HashMap<>();
+
+    // Busca todas as monografias do aluno
+    List<Monografia> monografias = monografiaRepository.findByAlunoId(alunoId);
+
+    if (monografias.isEmpty()) {
+        throw new RuntimeException("Nenhuma monografia encontrada para o aluno com ID: " + alunoId);
     }
+
+    Monografia ultimaMonografia = monografias.get(monografias.size() - 1);
+
+    // Adiciona o status atual da monografia
+    estatisticas.put("statusAtual", ultimaMonografia.getStatus());
+
+    // Calcula os dias no status atual
+    long diasNoStatus = calcularDiasNoStatus(ultimaMonografia);
+    estatisticas.put("diasNoStatus", diasNoStatus);
+
+    // Calcula o número de revisões
+    long numeroRevisoes = monografias.stream()
+            .filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO)
+            .count();
+    estatisticas.put("numeroRevisoes", numeroRevisoes);
+
+    // Verifica documentos pendentes
+    List<String> documentosPendentes = verificarDocumentosPendentes(ultimaMonografia);
+    estatisticas.put("documentosPendentes", documentosPendentes);
+
+    // Calcula o tempo médio de revisão
+    double tempoMedioRevisao = calcularTempoMedioRevisao(monografias);
+    estatisticas.put("tempoMedioRevisao", tempoMedioRevisao);
+
+    // Calcula a chance de aprovação
+    double chanceAprovacao = calcularChanceAprovacao(ultimaMonografia);
+    estatisticas.put("chanceAprovacao", chanceAprovacao + "%");
+
+    // Adiciona o status EM_PRE_DEFESA às estatísticas
+    long emPreDefesa = monografias.stream()
+            .filter(m -> m.getStatus() == StatusMonografia.EM_PRE_DEFESA)
+            .count();
+    estatisticas.put("monografiasEmPreDefesa", emPreDefesa);
+
+    return estatisticas;
+}
 
 
 private long calcularDiasNoStatus(Monografia monografia) {
-    if (monografia.getStatus() == StatusMonografia.PENDENTE || monografia.getStatus() == StatusMonografia.EM_REVISAO) {
+    if (monografia.getStatus() == StatusMonografia.PENDENTE || 
+        monografia.getStatus() == StatusMonografia.EM_REVISAO || 
+        monografia.getStatus() == StatusMonografia.EM_PRE_DEFESA) { // Adiciona o status EM_PRE_DEFESA
         LocalDateTime dataAtual = LocalDateTime.now();
         LocalDateTime dataStatus = monografia.getDataStatus(); 
         return ChronoUnit.DAYS.between(dataStatus, dataAtual);
     }
     return 0;
 }
-
 
 private List<String> verificarDocumentosPendentes(Monografia monografia) {
     List<String> documentosPendentes = new ArrayList<>();
@@ -484,11 +492,12 @@ private double calcularChanceAprovacao(Monografia monografia) {
 @Transactional
 public Map<String, Integer> getEstatisticasStatusPorAlunoId(UUID alunoId) {
     Map<String, Integer> estatisticas = new HashMap<>();
-    
+
     // Inicializa os contadores
     estatisticas.put("Pendente", 0);
     estatisticas.put("Aprovado", 0);
     estatisticas.put("Em_Revisao", 0);
+    estatisticas.put("Em_Pre_Defesa", 0); // Adiciona o status EM_PRE_DEFESA
 
     // Busca a monografia do aluno
     Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
@@ -506,6 +515,9 @@ public Map<String, Integer> getEstatisticasStatusPorAlunoId(UUID alunoId) {
             break;
         case EM_REVISAO:
             estatisticas.put("Em_Revisao", 1);
+            break;
+        case EM_PRE_DEFESA:
+            estatisticas.put("Em_Pre_Defesa", 1); // Adiciona o status EM_PRE_DEFESA
             break;
         default:
             throw new RuntimeException("Status da monografia inválido: " + monografia.getStatus());
@@ -536,10 +548,9 @@ public List<Monografia> getMonografiasEmPreDefesa() {
     return monografiaRepository.findByStatus(StatusMonografia.EM_PRE_DEFESA);
 }
 
-
 @Transactional
 public Map<String, Object> getEstatisticasPorOrientador(UUID orientadorId) {
- 
+    // Verifica se o orientador existe
     Usuario orientador = usuarioRepository.findById(orientadorId)
             .orElseThrow(() -> new RuntimeException("Orientador não encontrado com o ID: " + orientadorId));
 
@@ -547,21 +558,25 @@ public Map<String, Object> getEstatisticasPorOrientador(UUID orientadorId) {
         throw new RuntimeException("O usuário com ID " + orientadorId + " não é um orientador.");
     }
 
+    // Busca as monografias do orientador
     List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
 
-   
+    // Cria o mapa de estatísticas
     Map<String, Object> estatisticas = new HashMap<>();
     estatisticas.put("orientadorNome", orientador.getNome() + " " + orientador.getSobrenome());
     estatisticas.put("numeroAlunosOrientados", monografias.stream().map(Monografia::getAluno).distinct().count());
 
-
+    // Calcula o número de monografias em cada status
     long pendentes = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.PENDENTE).count();
     long emRevisao = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.EM_REVISAO).count();
     long aprovadas = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.APROVADO).count();
+    long emPreDefesa = monografias.stream().filter(m -> m.getStatus() == StatusMonografia.EM_PRE_DEFESA).count(); // Adiciona o status EM_PRE_DEFESA
 
+    // Adiciona as estatísticas ao mapa
     estatisticas.put("monografiasPendentes", pendentes);
     estatisticas.put("monografiasEmRevisao", emRevisao);
     estatisticas.put("monografiasAprovadas", aprovadas);
+    estatisticas.put("monografiasEmPreDefesa", emPreDefesa); // Adiciona o status EM_PRE_DEFESA
 
     return estatisticas;
 }
@@ -649,6 +664,9 @@ public Map<String, Object> getEstatisticasAdmin(UUID adminId) {
     // Total de monografias em revisão
     long totalMonografiasEmRevisao = monografiaRepository.countByStatus(StatusMonografia.EM_REVISAO);
     estatisticas.put("totalMonografiasEmRevisao", totalMonografiasEmRevisao);
+
+    long totalMonografiasEmPreDefesa = monografiaRepository.countByStatus(StatusMonografia.EM_PRE_DEFESA);
+    estatisticas.put("totalMonografiasEmPreDefesa", totalMonografiasEmPreDefesa);
 
     return estatisticas;
 }

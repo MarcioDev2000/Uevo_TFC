@@ -19,17 +19,14 @@ public class PreDefesa {
     private Monografia monografia;
 
     @Lob
-    @Column(name = "projeto", columnDefinition = "BYTEA", nullable = true)
-    private byte[] projeto;
-
-
-    @Lob
     @Column(name = "descricao", nullable = true)
     private String descricao;
 
+    @Column(nullable = false)
+    private LocalDateTime dataInicio; // Data e hora de início da pré-defesa
 
     @Column(nullable = false)
-    private LocalDateTime dataPreDefesa;
+    private LocalDateTime dataFim; // Data e hora de término da pré-defesa
 
     @ManyToOne
     @JoinColumn(name = "presidente_id", nullable = false)
@@ -60,20 +57,28 @@ public class PreDefesa {
         this.monografia = monografia;
     }
 
-    public byte[] getProjeto() {
-        return projeto;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setProjeto(byte[] projeto) {
-        this.projeto = projeto;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 
-    public LocalDateTime getDataPreDefesa() {
-        return dataPreDefesa;
+    public LocalDateTime getDataInicio() {
+        return dataInicio;
     }
 
-    public void setDataPreDefesa(LocalDateTime dataPreDefesa) {
-        this.dataPreDefesa = dataPreDefesa;
+    public void setDataInicio(LocalDateTime dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public LocalDateTime getDataFim() {
+        return dataFim;
+    }
+
+    public void setDataFim(LocalDateTime dataFim) {
+        this.dataFim = dataFim;
     }
 
     public Usuario getPresidente() {
@@ -98,13 +103,5 @@ public class PreDefesa {
 
     public void setStatus(StatusDefesa status) {
         this.status = status;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
     }
 }
