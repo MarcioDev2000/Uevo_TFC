@@ -36,6 +36,9 @@ public class PreDefesa {
     @Column(nullable = false)
     private StatusDefesa status;
 
+    @Column(columnDefinition = "TEXT")
+    private String descricao;
+
     // Getters e Setters
     public UUID getId() {
         return id;
@@ -91,5 +94,13 @@ public class PreDefesa {
 
     public void setStatus(StatusDefesa status) {
         this.status = status;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 }

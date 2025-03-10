@@ -10,7 +10,6 @@ public class PreDefesaDTO {
     private UUID id;
     private UUID monografiaId;
     private String temaMonografia; 
-    private String descricao;
     private LocalDateTime dataInicio;
     private LocalDateTime dataFim; 
     private UUID presidenteId;
@@ -40,14 +39,6 @@ public class PreDefesaDTO {
 
     public void setTemaMonografia(String temaMonografia) {
         this.temaMonografia = temaMonografia;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
     }
 
     public LocalDateTime getDataInicio() {

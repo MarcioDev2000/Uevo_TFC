@@ -31,7 +31,7 @@ public class PreDefesaService {
     private UsuarioRepository usuarioRepository;
 
     @Transactional
-    public PreDefesaDTO criarPreDefesa(UUID monografiaId, UUID presidenteId, UUID vogalId, LocalDateTime dataInicio, LocalDateTime dataFim, String descricao) {
+    public PreDefesaDTO criarPreDefesa(UUID monografiaId, UUID presidenteId, UUID vogalId, LocalDateTime dataInicio, LocalDateTime dataFim) {
         // Busca a monografia pelo ID
         Monografia monografia = monografiaRepository.findById(monografiaId)
                 .orElseThrow(() -> new RuntimeException("Monografia não encontrada com o ID: " + monografiaId));
@@ -136,6 +136,7 @@ private PreDefesaResponseDTO toDTO(PreDefesa preDefesa) {
     dto.setTemaMonografia(preDefesa.getMonografia().getTema());
     dto.setDataInicio(preDefesa.getDataInicio());
     dto.setDataFim(preDefesa.getDataFim());
+    dto.setDescricao(preDefesa.getDescricao());
     dto.setPresidenteId(preDefesa.getPresidente().getId());
     dto.setPresidenteNomeCompleto(preDefesa.getPresidente().getNome(), preDefesa.getPresidente().getSobrenome());
     dto.setVogalId(preDefesa.getVogal().getId());
@@ -163,5 +164,106 @@ public List<PreDefesaResponseDTO> listarPreDefesasPorStatus(StatusDefesa status)
             .collect(Collectors.toList());
 }
 
+public List<PreDefesaResponseDTO> listarPreDefesasPorUsuario(UUID usuarioId) {
+    // Busca o usuário pelo ID
+    usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    // Busca as pré-defesas onde o usuário é presidente ou vogal
+    List<PreDefesa> preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
+
+    // Converte as pré-defesas para DTOs
+    return preDefesas.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+}
+
+@Transactional
+public PreDefesaResponseDTO atualizarStatusPreDefesa(UUID preDefesaId, StatusDefesa status, UUID usuarioId, String descricao) {
+    // Busca a pré-defesa pelo ID
+    PreDefesa preDefesa = preDefesaRepository.findById(preDefesaId)
+            .orElseThrow(() -> new RuntimeException("Pré-defesa não encontrada com o ID: " + preDefesaId));
+
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    // Verifica se o usuário é o presidente ou o vogal da pré-defesa
+    if (!usuario.getId().equals(preDefesa.getPresidente().getId()) &&
+        !usuario.getId().equals(preDefesa.getVogal().getId())) {
+        throw new RuntimeException("Apenas o presidente ou o vogal podem atualizar o status da pré-defesa.");
+    }
+
+    // Verifica se a pré-defesa está no status MARCADA
+    if (preDefesa.getStatus() != StatusDefesa.MARCADA) {
+        throw new RuntimeException("A pré-defesa não está no status MARCADA e não pode ser atualizada.");
+    }
+
+    // Atualiza o status da pré-defesa
+    preDefesa.setStatus(status);
+
+    // Adiciona a descrição (recomendações) à pré-defesa
+    if (descricao != null && !descricao.isEmpty()) {
+        if (preDefesa.getDescricao() == null) {
+            preDefesa.setDescricao(descricao);
+        } else {
+            preDefesa.setDescricao(preDefesa.getDescricao() + "\n" + descricao);
+        }
+    }
+
+    // Salva a pré-defesa atualizada
+    PreDefesa savedPreDefesa = preDefesaRepository.save(preDefesa);
+
+    // Atualiza o status da monografia com base no resultado da pré-defesa
+    Monografia monografia = preDefesa.getMonografia();
+    if (status == StatusDefesa.APROVADO) {
+        monografia.setStatus(StatusMonografia.APROVADO); // Aprovado para seguir para a defesa final
+    } else if (status == StatusDefesa.EM_REVISAO) {
+        monografia.setStatus(StatusMonografia.EM_REVISAO); // Precisa de revisão
+    }
+    monografiaRepository.save(monografia);
+
+    // Retorna o DTO atualizado
+    return toDTO(savedPreDefesa);
+}
+
+@Transactional
+public PreDefesaResponseDTO visualizarPreDefesa(UUID preDefesaId, UUID usuarioId) {
+    // Busca a pré-defesa pelo ID
+    PreDefesa preDefesa = preDefesaRepository.findById(preDefesaId)
+            .orElseThrow(() -> new RuntimeException("Pré-defesa não encontrada com o ID: " + preDefesaId));
+
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    // Verifica se o usuário tem permissão para visualizar a pré-defesa
+    boolean podeVisualizar = false;
+
+    // Verifica se o usuário é o aluno associado à monografia
+    if (usuario.getId().equals(preDefesa.getMonografia().getAluno().getId())) {
+        podeVisualizar = true;
+    }
+    // Verifica se o usuário é o orientador associado à monografia
+    else if (usuario.getId().equals(preDefesa.getMonografia().getOrientador().getId())) {
+        podeVisualizar = true;
+    }
+    // Verifica se o usuário é o presidente da pré-defesa
+    else if (usuario.getId().equals(preDefesa.getPresidente().getId())) {
+        podeVisualizar = true;
+    }
+    // Verifica se o usuário é o vogal da pré-defesa
+    else if (usuario.getId().equals(preDefesa.getVogal().getId())) {
+        podeVisualizar = true;
+    }
+
+    // Se o usuário não tiver permissão, lança uma exceção
+    if (!podeVisualizar) {
+        throw new RuntimeException("Você não tem permissão para visualizar esta pré-defesa.");
+    }
+
+    // Retorna as informações da pré-defesa no formato DTO
+    return toDTO(preDefesa);
+}
 
 }

@@ -18,6 +18,7 @@ public class PreDefesaResponseDTO {
     private UUID vogalId;
     private String vogalNomeCompleto; // Nome + Sobrenome do vogal
     private StatusDefesa status;
+    private String descricao;
 
     // Getters and Setters
     public UUID getId() {
@@ -122,5 +123,13 @@ public class PreDefesaResponseDTO {
 
     public void setStatus(StatusDefesa status) {
         this.status = status;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 }

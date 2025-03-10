@@ -35,4 +35,9 @@ public interface PreDefesaRepository extends JpaRepository<PreDefesa, UUID> {
     boolean existsByMonografiaIdAndStatus(
             @Param("monografiaId") UUID monografiaId,
             @Param("status") StatusDefesa status);
+
+            @Query("SELECT p FROM PreDefesa p WHERE p.presidente.id = :presidenteId OR p.vogal.id = :vogalId")
+List<PreDefesa> findByPresidenteIdOrVogalId(
+        @Param("presidenteId") UUID presidenteId,
+        @Param("vogalId") UUID vogalId);
 }
