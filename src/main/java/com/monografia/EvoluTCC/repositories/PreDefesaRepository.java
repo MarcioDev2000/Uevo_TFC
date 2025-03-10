@@ -13,7 +13,9 @@ import java.util.UUID;
 
 @Repository
 public interface PreDefesaRepository extends JpaRepository<PreDefesa, UUID> {
-     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+
+    // Verifica se existe uma pré-defesa no mesmo intervalo de tempo e especialidade
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
            "FROM PreDefesa p " +
            "WHERE p.monografia.especialidade.id = :especialidadeId " +
            "AND ((p.dataInicio BETWEEN :dataInicio AND :dataFim) OR (p.dataFim BETWEEN :dataInicio AND :dataFim))")
@@ -22,6 +24,15 @@ public interface PreDefesaRepository extends JpaRepository<PreDefesa, UUID> {
             @Param("dataFim") LocalDateTime dataFim,
             @Param("especialidadeId") UUID especialidadeId);
 
-            @Query("SELECT p FROM PreDefesa p WHERE p.status = :status")
-            List<PreDefesa> findByStatus(@Param("status") StatusDefesa status);
+    // Lista pré-defesas por status
+    @Query("SELECT p FROM PreDefesa p WHERE p.status = :status")
+    List<PreDefesa> findByStatus(@Param("status") StatusDefesa status);
+
+    // Verifica se existe uma pré-defesa ativa para a mesma monografia
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+           "FROM PreDefesa p " +
+           "WHERE p.monografia.id = :monografiaId AND p.status = :status")
+    boolean existsByMonografiaIdAndStatus(
+            @Param("monografiaId") UUID monografiaId,
+            @Param("status") StatusDefesa status);
 }
