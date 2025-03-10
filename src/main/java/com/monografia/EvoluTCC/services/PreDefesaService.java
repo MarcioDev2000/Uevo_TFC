@@ -1,13 +1,15 @@
 package com.monografia.EvoluTCC.services;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.monografia.EvoluTCC.Enums.StatusDefesa;
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
 import com.monografia.EvoluTCC.dto.PreDefesaDTO;
+import com.monografia.EvoluTCC.dto.PreDefesaResponseDTO;
 import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.models.PreDefesa;
 import com.monografia.EvoluTCC.models.Usuario;
@@ -102,4 +104,61 @@ public PreDefesaDTO criarPreDefesa(UUID monografiaId, UUID presidenteId, UUID vo
 
     return preDefesaDTO;
 }
+
+@Transactional
+public PreDefesaResponseDTO buscarPreDefesaPorId(UUID preDefesaId) {
+    try {
+        PreDefesa preDefesa = preDefesaRepository.findById(preDefesaId)
+                .orElseThrow(() -> new RuntimeException("Pré-defesa não encontrada com o ID: " + preDefesaId));
+
+        return toDTO(preDefesa); // Aqui estava o erro: use toDTO em vez de toResponseDTO
+    } catch (Exception e) {
+        throw new RuntimeException("Unable to access LOB stream", e);
+    }
+}
+
+public List<PreDefesaResponseDTO> listarTodasPreDefesasMarcadas() {
+    List<PreDefesa> preDefesas = preDefesaRepository.findByStatus(StatusDefesa.MARCADA);
+    return preDefesas.stream()
+            .map(this::toDTO) // Aqui também estava o erro: use toDTO
+            .collect(Collectors.toList());
+}
+
+
+private PreDefesaResponseDTO toDTO(PreDefesa preDefesa) {
+    PreDefesaResponseDTO dto = new PreDefesaResponseDTO();
+    dto.setId(preDefesa.getId());
+    dto.setMonografiaId(preDefesa.getMonografia().getId());
+    dto.setTemaMonografia(preDefesa.getMonografia().getTema());
+    dto.setDescricao(preDefesa.getDescricao());
+    dto.setDataInicio(preDefesa.getDataInicio());
+    dto.setDataFim(preDefesa.getDataFim());
+    dto.setPresidenteId(preDefesa.getPresidente().getId());
+    dto.setPresidenteNomeCompleto(preDefesa.getPresidente().getNome(), preDefesa.getPresidente().getSobrenome());
+    dto.setVogalId(preDefesa.getVogal().getId());
+    dto.setVogalNomeCompleto(preDefesa.getVogal().getNome(), preDefesa.getVogal().getSobrenome());
+    dto.setAlunoNomeCompleto(preDefesa.getMonografia().getAluno().getNome() + " " + preDefesa.getMonografia().getAluno().getSobrenome());
+    dto.setEspecialidadeNome(preDefesa.getMonografia().getEspecialidade().getNome());
+    dto.setOrientadorNomeCompleto(preDefesa.getMonografia().getOrientador().getNome() + " " + preDefesa.getMonografia().getOrientador().getSobrenome());
+
+    dto.setStatus(preDefesa.getStatus());
+
+    return dto;
+}
+
+public List<PreDefesaResponseDTO> listarPreDefesasPorStatus(StatusDefesa status) {
+    List<PreDefesa> preDefesas;
+
+    if (status != null) {
+        preDefesas = preDefesaRepository.findByStatus(status);
+    } else {
+        preDefesas = preDefesaRepository.findAll();
+    }
+
+    return preDefesas.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+}
+
+
 }

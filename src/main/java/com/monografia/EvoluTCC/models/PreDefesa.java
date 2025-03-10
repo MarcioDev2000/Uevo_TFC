@@ -19,7 +19,7 @@ public class PreDefesa {
     private Monografia monografia;
 
     @Lob
-    @Column(name = "descricao", nullable = true)
+    @Column(name = "descricao", length = 255)
     private String descricao;
 
     @Column(nullable = false)
