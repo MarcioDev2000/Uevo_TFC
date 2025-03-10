@@ -11,7 +11,6 @@ public class PreDefesaResponseDTO {
     private String alunoNomeCompleto; 
     private String especialidadeNome; 
     private String orientadorNomeCompleto; 
-    private String descricao;
     private LocalDateTime dataInicio;
     private LocalDateTime dataFim;
     private UUID presidenteId;
@@ -67,14 +66,6 @@ public class PreDefesaResponseDTO {
 
     public void setOrientadorNomeCompleto(String orientadorNomeCompleto) {
         this.orientadorNomeCompleto = orientadorNomeCompleto;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
     }
 
     public LocalDateTime getDataInicio() {

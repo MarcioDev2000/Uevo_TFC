@@ -86,9 +86,8 @@ public class PreDefesaService {
         preDefesa.setDataFim(dataFim);
         preDefesa.setPresidente(presidente);
         preDefesa.setVogal(vogal);
-        preDefesa.setStatus(StatusDefesa.MARCADA); // Status inicial da pré-defesa
-        preDefesa.setDescricao(descricao);
-    
+        preDefesa.setStatus(StatusDefesa.MARCADA); 
+ 
         // Atualiza o status da monografia para EM_PRE_DEFESA
         monografia.setStatus(StatusMonografia.EM_PRE_DEFESA);
         monografiaRepository.save(monografia);
@@ -100,8 +99,7 @@ public class PreDefesaService {
         PreDefesaDTO preDefesaDTO = new PreDefesaDTO();
         preDefesaDTO.setId(savedPreDefesa.getId());
         preDefesaDTO.setMonografiaId(savedPreDefesa.getMonografia().getId());
-        preDefesaDTO.setTemaMonografia(savedPreDefesa.getMonografia().getTema()); // Define o tema da monografia
-        preDefesaDTO.setDescricao(savedPreDefesa.getDescricao());
+        preDefesaDTO.setTemaMonografia(savedPreDefesa.getMonografia().getTema());
         preDefesaDTO.setDataInicio(savedPreDefesa.getDataInicio());
         preDefesaDTO.setDataFim(savedPreDefesa.getDataFim());
         preDefesaDTO.setPresidenteId(savedPreDefesa.getPresidente().getId());
@@ -136,7 +134,6 @@ private PreDefesaResponseDTO toDTO(PreDefesa preDefesa) {
     dto.setId(preDefesa.getId());
     dto.setMonografiaId(preDefesa.getMonografia().getId());
     dto.setTemaMonografia(preDefesa.getMonografia().getTema());
-    dto.setDescricao(preDefesa.getDescricao());
     dto.setDataInicio(preDefesa.getDataInicio());
     dto.setDataFim(preDefesa.getDataFim());
     dto.setPresidenteId(preDefesa.getPresidente().getId());

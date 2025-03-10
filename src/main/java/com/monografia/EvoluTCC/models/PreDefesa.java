@@ -18,15 +18,11 @@ public class PreDefesa {
     @JoinColumn(name = "monografia_id", nullable = false)
     private Monografia monografia;
 
-    @Lob
-    @Column(name = "descricao", length = 255)
-    private String descricao;
+    @Column(nullable = false)
+    private LocalDateTime dataInicio; 
 
     @Column(nullable = false)
-    private LocalDateTime dataInicio; // Data e hora de início da pré-defesa
-
-    @Column(nullable = false)
-    private LocalDateTime dataFim; // Data e hora de término da pré-defesa
+    private LocalDateTime dataFim;
 
     @ManyToOne
     @JoinColumn(name = "presidente_id", nullable = false)
@@ -55,14 +51,6 @@ public class PreDefesa {
 
     public void setMonografia(Monografia monografia) {
         this.monografia = monografia;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
     }
 
     public LocalDateTime getDataInicio() {
