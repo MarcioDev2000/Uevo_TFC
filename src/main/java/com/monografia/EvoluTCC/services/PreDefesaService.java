@@ -266,4 +266,32 @@ public PreDefesaResponseDTO visualizarPreDefesa(UUID preDefesaId, UUID usuarioId
     return toDTO(preDefesa);
 }
 
+public List<PreDefesaResponseDTO> listarPreDefesasDoUsuario(UUID usuarioId) {
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    List<PreDefesa> preDefesas;
+
+    // Verifica o tipo do usuário
+    String tipoUsuario = usuario.getTipoUsuario().getNome(); // Acessa o nome do tipo de usuário
+
+    if (tipoUsuario.equals("Aluno")) {
+        // Busca as pré-defesas onde o aluno é o autor da monografia
+        preDefesas = preDefesaRepository.findByMonografiaAlunoId(usuarioId);
+    } else if (tipoUsuario.equals("Orientador")) {
+        // Busca as pré-defesas onde o usuário é orientador da monografia
+        preDefesas = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+    } else {
+        // Busca as pré-defesas onde o usuário é presidente ou vogal
+        preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
+    }
+
+    // Converte as pré-defesas para DTOs
+    return preDefesas.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+}
+
+
 }

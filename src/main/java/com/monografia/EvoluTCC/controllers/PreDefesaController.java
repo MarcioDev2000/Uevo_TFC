@@ -57,7 +57,7 @@ public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesas(@RequestParam
 @GetMapping("/usuario/{usuarioId}")
 public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesasPorUsuario(@PathVariable UUID usuarioId) {
     // Chama o serviço para listar as pré-defesas associadas ao usuário
-    List<PreDefesaResponseDTO> preDefesas = preDefesaService.listarPreDefesasPorUsuario(usuarioId);
+    List<PreDefesaResponseDTO> preDefesas = preDefesaService.listarPreDefesasDoUsuario(usuarioId);
 
     // Retorna a resposta com a lista de DTOs e o status HTTP 200 (OK)
     return ResponseEntity.ok(preDefesas);

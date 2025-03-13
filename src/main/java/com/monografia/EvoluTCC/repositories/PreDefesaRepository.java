@@ -36,8 +36,17 @@ public interface PreDefesaRepository extends JpaRepository<PreDefesa, UUID> {
             @Param("monografiaId") UUID monografiaId,
             @Param("status") StatusDefesa status);
 
+            @Query("SELECT p FROM PreDefesa p WHERE p.monografia.aluno.id = :alunoId")
+            List<PreDefesa> findByMonografiaAlunoId(@Param("alunoId") UUID alunoId);
+        
+            // Busca pré-defesas onde o orientador é o orientador da monografia
+            @Query("SELECT p FROM PreDefesa p WHERE p.monografia.orientador.id = :orientadorId")
+            List<PreDefesa> findByMonografiaOrientadorId(@Param("orientadorId") UUID orientadorId);
+        
+            // Busca pré-defesas onde o usuário é presidente ou vogal
             @Query("SELECT p FROM PreDefesa p WHERE p.presidente.id = :presidenteId OR p.vogal.id = :vogalId")
-List<PreDefesa> findByPresidenteIdOrVogalId(
-        @Param("presidenteId") UUID presidenteId,
-        @Param("vogalId") UUID vogalId);
+            List<PreDefesa> findByPresidenteIdOrVogalId(
+                    @Param("presidenteId") UUID presidenteId,
+                    @Param("vogalId") UUID vogalId);
+        
 }

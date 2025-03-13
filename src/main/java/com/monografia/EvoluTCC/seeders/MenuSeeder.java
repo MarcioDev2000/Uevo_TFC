@@ -55,6 +55,7 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Monografias Orientadas", "icon-book-bookmark", "/orientador/monografias", tipo));
                 menus.add(new Menus("Avaliar Pré-Defesa", "icon-check-2", "/orientador/avaliar-pre-defesa", tipo));
                 menus.add(new Menus("Avaliar Defesa", "icon-check-2", "/orientador/avaliar-defesa", tipo));
+                menus.add(new Menus("Calendário", "icon-calendar-60", "/orientador/calendario", tipo)); 
             });
 
             menuRepository.saveAll(menus);
