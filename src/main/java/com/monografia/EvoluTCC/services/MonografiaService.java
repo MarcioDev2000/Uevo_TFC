@@ -297,7 +297,6 @@ private void adicionarLinksDocumentos(Monografia monografia) {
     }
 
     // Métodos auxiliares
-    @SuppressWarnings("null")
     private void validarDocumento(MultipartFile documento) {
         if (documento != null && !documento.isEmpty()) {
             if (!documento.getContentType().equals("application/pdf")) {

@@ -301,5 +301,11 @@ public List<PreDefesaResponseDTO> listarPreDefesasDoUsuario(UUID usuarioId) {
             .collect(Collectors.toList());
 }
 
+public List<PreDefesaResponseDTO> listarTodasPreDefesas() {
+    List<PreDefesa> preDefesas = preDefesaRepository.findAll();
+    return preDefesas.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+}
 
 }

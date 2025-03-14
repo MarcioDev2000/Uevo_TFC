@@ -63,6 +63,15 @@ public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesasPorUsuario(@Pa
     return ResponseEntity.ok(preDefesas);
 }
 
+@GetMapping("/admin")
+public ResponseEntity<List<PreDefesaResponseDTO>> listarTodasPreDefesas() {
+    // Chama o serviço para listar todas as pré-defesas
+    List<PreDefesaResponseDTO> preDefesas = preDefesaService.listarTodasPreDefesas();
+
+    // Retorna a resposta com a lista de DTOs e o status HTTP 200 (OK)
+    return ResponseEntity.ok(preDefesas);
+}
+
 @PutMapping("/{preDefesaId}/status")
     public PreDefesaResponseDTO atualizarStatusPreDefesa(
             @PathVariable UUID preDefesaId,
