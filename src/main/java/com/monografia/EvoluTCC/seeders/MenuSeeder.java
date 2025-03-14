@@ -46,16 +46,15 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Perfil", "icon-single-02", "/aluno/perfil", tipo));
                 menus.add(new Menus("Inscrição de Monografia", "icon-paper", "/aluno/inscricao-monografia", tipo));
                 menus.add(new Menus("Calendário", "icon-calendar-60", "/aluno/calendario", tipo)); 
-                menus.add(new Menus("Monografias", "icon-book-bookmark", "/aluno/minhas-monografias", tipo)); 
+               // menus.add(new Menus("Monografias", "icon-book-bookmark", "/aluno/minhas-monografias", tipo)); 
             });
 
             orientador.ifPresent(tipo -> {
                 menus.add(new Menus("Dashboard", "icon-chart-bar-32", "/orientador/estatistica", tipo));
                 menus.add(new Menus("Gerenciar Alunos", "icon-single-02", "/orientador/alunos", tipo));
                 menus.add(new Menus("Monografias Orientadas", "icon-book-bookmark", "/orientador/monografias", tipo));
-                menus.add(new Menus("Avaliar Pré-Defesa", "icon-check-2", "/orientador/avaliar-pre-defesa", tipo));
-                menus.add(new Menus("Avaliar Defesa", "icon-check-2", "/orientador/avaliar-defesa", tipo));
                 menus.add(new Menus("Calendário", "icon-calendar-60", "/orientador/calendario", tipo)); 
+              
             });
 
             menuRepository.saveAll(menus);
