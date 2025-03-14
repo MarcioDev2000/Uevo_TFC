@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.monografia.EvoluTCC.Enums.StatusDefesa;
@@ -289,7 +291,15 @@ public List<PreDefesaResponseDTO> listarPreDefesasDoUsuario(UUID usuarioId) {
         preDefesas = preDefesaRepository.findByMonografiaAlunoId(usuarioId);
     } else if (tipoUsuario.equals("Orientador")) {
         // Busca as pré-defesas onde o usuário é orientador da monografia
-        preDefesas = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+        List<PreDefesa> preDefesasOrientador = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+
+        // Busca as pré-defesas onde o usuário é presidente ou vogal
+        List<PreDefesa> preDefesasPresidenteVogal = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
+
+        // Combina as duas listas e remove duplicatas (se houver)
+        preDefesas = Stream.concat(preDefesasOrientador.stream(), preDefesasPresidenteVogal.stream())
+                           .distinct()
+                           .collect(Collectors.toList());
     } else {
         // Busca as pré-defesas onde o usuário é presidente ou vogal
         preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
