@@ -12,13 +12,17 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.monografia.EvoluTCC.config.JwtUtil;
+import com.monografia.EvoluTCC.dto.CursoDTO;
+import com.monografia.EvoluTCC.dto.EspecialidadeDTO;
 import com.monografia.EvoluTCC.dto.UsuarioDTOResponse;
 import com.monografia.EvoluTCC.dto.UsuarioDto;
 import com.monografia.EvoluTCC.dto.userAllDTO;
+import com.monografia.EvoluTCC.models.Curso;
 import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.models.TipoUsuario;
 import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.producers.UserProducer;
+import com.monografia.EvoluTCC.repositories.CursoRepository;
 import com.monografia.EvoluTCC.repositories.EspecialidadeRepository;
 import com.monografia.EvoluTCC.repositories.TipoUsuarioRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
@@ -48,6 +52,9 @@ public class UsuarioService {
     @Autowired
     private EspecialidadeRepository especialidadeRepository;
 
+    @Autowired
+    private CursoRepository cursoRepository;
+
    public Usuario criarUsuario(UsuarioDto usuarioDto) {
         // Verifica se o email já está cadastrado
         if (usuarioRepository.findByEmail(usuarioDto.getEmail()).isPresent()) {
@@ -71,6 +78,12 @@ public class UsuarioService {
                     .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
         }
 
+         Curso curso = null;
+         if (usuarioDto.getCursoId() != null) {
+        curso = cursoRepository.findById(usuarioDto.getCursoId())
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+           }
+
         // Cria o novo usuário
         Usuario usuario = new Usuario();
         usuario.setNome(usuarioDto.getNome());
@@ -81,6 +94,8 @@ public class UsuarioService {
         usuario.setNif(usuarioDto.getNif());
         usuario.setTipoUsuario(tipoUsuario); // Define o TipoUsuario
         usuario.setPassword(passwordEncoder.encode(usuarioDto.getPassword()));
+        usuario.setCurso(curso);
+
         if (tipoUsuario.getNome().equalsIgnoreCase("Admin")) {
             usuario.setStatus(true);
         } else {
@@ -109,49 +124,73 @@ public class UsuarioService {
         }
     }
 
-    @Transactional
-public UsuarioDto atualizarUsuarioCompleto(UUID id, UsuarioDto usuarioDto) {
-    // Busca o usuário pelo ID
-    Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
-    // Atualiza os campos do usuário
-    usuario.setNome(usuarioDto.getNome());
-    usuario.setSobrenome(usuarioDto.getSobrenome());
-    usuario.setEndereco(usuarioDto.getEndereco());
-    usuario.setTelefone(usuarioDto.getTelefone());
-    usuario.setEmail(usuarioDto.getEmail());
-    usuario.setNif(usuarioDto.getNif());
-    usuario.setMatricula(usuarioDto.getMatricula());
-
-    // Busca e define o novo TipoUsuario
-    TipoUsuario tipoUsuario = tipoUsuarioRepository.findById(usuarioDto.getTipoUsuario())
-            .orElseThrow(() -> new RuntimeException("Tipo de usuário não encontrado"));
-    usuario.setTipoUsuario(tipoUsuario);
-
-    // Busca e define a Especialidade, se fornecida
-    if (usuarioDto.getEspecialidade() != null) {
-        Especialidade especialidade = especialidadeRepository.findById(usuarioDto.getEspecialidade())
-                .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
-        usuario.setEspecialidade(especialidade);
-    } else {
-        usuario.setEspecialidade(null); // Caso o usuário não tenha especialidade
-    }
-
-    // Atualiza a senha, se fornecida
-    if (usuarioDto.getPassword() != null && !usuarioDto.getPassword().isEmpty()) {
-        usuario.setPassword(passwordEncoder.encode(usuarioDto.getPassword()));
-    }
-
-    // Salva as alterações
-    usuarioRepository.save(usuario);
-
-    return usuarioDto;
+    public List<CursoDTO> listarTodosCursos() {
+    return cursoRepository.findAll().stream()
+            .map(curso -> new CursoDTO(curso.getId(), curso.getNome()))
+            .collect(Collectors.toList());
 }
 
+public List<EspecialidadeDTO> listarEspecialidadesPorCurso(UUID cursoId) {
+    return especialidadeRepository.findByCursoId(cursoId).stream()
+            .map(especialidade -> new EspecialidadeDTO(especialidade.getId(), especialidade.getNome()))
+            .collect(Collectors.toList());
+}
 
-    public List<Usuario> listarTodosUsuarios() {
-        return usuarioRepository.findAll();
+    @Transactional
+    public UsuarioDto atualizarUsuarioCompleto(UUID id, UsuarioDto usuarioDto) {
+        // Busca o usuário pelo ID
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+    
+        // Atualiza os campos do usuário
+        usuario.setNome(usuarioDto.getNome());
+        usuario.setSobrenome(usuarioDto.getSobrenome());
+        usuario.setEndereco(usuarioDto.getEndereco());
+        usuario.setTelefone(usuarioDto.getTelefone());
+        usuario.setEmail(usuarioDto.getEmail());
+        usuario.setNif(usuarioDto.getNif());
+        usuario.setMatricula(usuarioDto.getMatricula());
+    
+        // Busca e define o novo TipoUsuario
+        TipoUsuario tipoUsuario = tipoUsuarioRepository.findById(usuarioDto.getTipoUsuario())
+                .orElseThrow(() -> new RuntimeException("Tipo de usuário não encontrado"));
+        usuario.setTipoUsuario(tipoUsuario);
+    
+        // Busca e define a Especialidade, se fornecida
+        if (usuarioDto.getEspecialidade() != null) {
+            Especialidade especialidade = especialidadeRepository.findById(usuarioDto.getEspecialidade())
+                    .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
+            usuario.setEspecialidade(especialidade);
+        } else {
+            usuario.setEspecialidade(null); // Caso o usuário não tenha especialidade
+        }
+    
+        // Busca e define o Curso, se fornecido
+        if (usuarioDto.getCursoId() != null) {
+            Curso curso = cursoRepository.findById(usuarioDto.getCursoId())
+                    .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+            usuario.setCurso(curso);
+        } else {
+            usuario.setCurso(null); // Caso o usuário não tenha curso
+        }
+    
+        // Atualiza a senha, se fornecida
+        if (usuarioDto.getPassword() != null && !usuarioDto.getPassword().isEmpty()) {
+            usuario.setPassword(passwordEncoder.encode(usuarioDto.getPassword()));
+        }
+    
+        // Salva as alterações
+        usuarioRepository.save(usuario);
+    
+        return usuarioDto;
+    }
+
+
+    public List<UsuarioDTOResponse> listarTodosUsuarios() {
+        return usuarioRepository.findAll().stream()
+                .map(UsuarioDTOResponse::new) // Converte cada Usuario para UsuarioDTOResponse
+                .collect(Collectors.toList());
     }
 
     public Optional<Usuario> listarUsuarioPorId(UUID id) {

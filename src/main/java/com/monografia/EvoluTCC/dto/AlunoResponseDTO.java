@@ -8,6 +8,11 @@ public class AlunoResponseDTO {
     private String email;
     private String nif;
     private String matricula;
+    private String curso; // Armazena o nome do curso como String
+
+    // Construtor vazio
+    public AlunoResponseDTO() {
+    }
 
     // Getters e Setters
     public String getNome() {
@@ -64,5 +69,14 @@ public class AlunoResponseDTO {
 
     public void setMatricula(String matricula) {
         this.matricula = matricula;
+    }
+
+    // Getter e Setter para o campo curso
+    public String getCurso() {
+        return curso;
+    }
+
+    public void setCurso(String curso) {
+        this.curso = curso;
     }
 }

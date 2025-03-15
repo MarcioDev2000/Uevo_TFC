@@ -37,6 +37,10 @@ public class Usuario {
     private boolean status = false;
 
     @ManyToOne
+    @JoinColumn(name = "curso_id", nullable = true) 
+    private Curso curso;
+
+    @ManyToOne
     @JoinColumn(name = "especialidade_id",  nullable = true)
     private Especialidade especialidade;
 
@@ -57,8 +61,10 @@ public class Usuario {
     public Usuario() {}
 
     // Construtor com parâmetros
-    public Usuario(String password, String nome, String sobrenome, String endereco, String telefone,
-    String email, String nif, Especialidade especialidade, String matricula, TipoUsuario tipoUsuario) {
+    // Construtor com parâmetros
+public Usuario(String password, String nome, String sobrenome, String endereco, String telefone,
+String email, String nif, Especialidade especialidade, String matricula, 
+TipoUsuario tipoUsuario, Curso curso) {
 this.password = password;
 this.nome = nome;
 this.sobrenome = sobrenome;
@@ -69,6 +75,7 @@ this.nif = nif;
 this.especialidade = especialidade;
 this.matricula = matricula;
 this.tipoUsuario = tipoUsuario;
+this.curso = curso; // Adiciona o curso
 this.status = false; // Por padrão, a conta é desativada
 }
 
@@ -184,5 +191,13 @@ this.status = false; // Por padrão, a conta é desativada
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
     }
 }

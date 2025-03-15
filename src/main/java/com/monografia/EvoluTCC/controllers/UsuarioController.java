@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.monografia.EvoluTCC.dto.CursoDTO;
+import com.monografia.EvoluTCC.dto.EspecialidadeDTO;
 import com.monografia.EvoluTCC.dto.UsuarioDTOResponse;
 import com.monografia.EvoluTCC.dto.UsuarioDto;
 import com.monografia.EvoluTCC.dto.userAllDTO;
@@ -39,6 +42,25 @@ public class UsuarioController {
         }
     }
 
+    @GetMapping("/cursos")
+public ResponseEntity<List<CursoDTO>> listarTodosCursos() {
+    try {
+        List<CursoDTO> cursos = usuarioService.listarTodosCursos();
+        return ResponseEntity.ok(cursos);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
+
+@GetMapping("/cursos/{cursoId}/especialidades")
+public ResponseEntity<List<EspecialidadeDTO>> listarEspecialidadesPorCurso(@PathVariable UUID cursoId) {
+    try {
+        List<EspecialidadeDTO> especialidades = usuarioService.listarEspecialidadesPorCurso(cursoId);
+        return ResponseEntity.ok(especialidades);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
 
     @GetMapping("/inativos")
 public ResponseEntity<List<userAllDTO>> listarUsuariosInativos(@RequestParam UUID adminId) {
@@ -65,15 +87,15 @@ public ResponseEntity<?> atualizarStatusUsuario(@PathVariable UUID id, @RequestP
 }
 
 
-    @GetMapping
-    public ResponseEntity<List<Usuario>> listarTodosUsuarios() {
-        try {
-            List<Usuario> usuarios = usuarioService.listarTodosUsuarios();
-            return ResponseEntity.ok(usuarios);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+@GetMapping
+public ResponseEntity<List<UsuarioDTOResponse>> listarTodosUsuarios() {
+    try {
+        List<UsuarioDTOResponse> usuarios = usuarioService.listarTodosUsuarios();
+        return ResponseEntity.ok(usuarios);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
+}
 
     @GetMapping("/{id}/")
 public ResponseEntity<UsuarioDTOResponse> listarUsuarioPorId(@PathVariable UUID id) {

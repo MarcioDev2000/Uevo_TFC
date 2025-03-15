@@ -607,21 +607,20 @@ public Map<String, Object> getEstatisticasPorOrientador(UUID orientadorId) {
 
 @Transactional
 public List<AlunoResponseDTO> getAlunosPorOrientador(UUID orientadorId) {
-
     if (!usuarioRepository.existsById(orientadorId)) {
         throw new RuntimeException("Orientador não encontrado com o ID: " + orientadorId);
     }
 
     List<Monografia> monografias = monografiaRepository.findByOrientadorId(orientadorId);
 
-  
     return monografias.stream()
-            .map(Monografia::getAluno)
-            .distinct()
-            .map(this::mapToAlunoResponseDTO)
+            .map(Monografia::getAluno) // Obtém o aluno de cada monografia
+            .distinct() // Remove alunos duplicados
+            .map(this::mapToAlunoResponseDTO) // Mapeia para AlunoResponseDTO
             .collect(Collectors.toList());
 }
 
+// Método auxiliar para mapear Aluno para AlunoResponseDTO
 private AlunoResponseDTO mapToAlunoResponseDTO(Usuario aluno) {
     AlunoResponseDTO dto = new AlunoResponseDTO();
     dto.setNome(aluno.getNome());
@@ -631,9 +630,9 @@ private AlunoResponseDTO mapToAlunoResponseDTO(Usuario aluno) {
     dto.setEmail(aluno.getEmail());
     dto.setNif(aluno.getNif());
     dto.setMatricula(aluno.getMatricula());
+    dto.setCurso(aluno.getCurso() != null ? aluno.getCurso().getNome() : null); // Extrai o nome do curso
     return dto;
 }
-
 
 @Transactional
 public MonografiaResponseDTO getMonografiaByOrientadorId(UUID orientadorId, UUID monografiaId) {

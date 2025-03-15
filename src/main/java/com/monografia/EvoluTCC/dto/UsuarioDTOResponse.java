@@ -12,6 +12,7 @@ public class UsuarioDTOResponse {
     private String especialidade; // String (nome da especialidade ou null)
     private String matricula;
     private String tipoUsuario; // Agora é uma String
+    private String curso; // Nome do curso
 
     public UsuarioDTOResponse(Usuario usuario) {
         this.nome = usuario.getNome();
@@ -23,9 +24,10 @@ public class UsuarioDTOResponse {
         this.especialidade = usuario.getEspecialidade() != null ? usuario.getEspecialidade().getNome() : null; // Converte para String
         this.matricula = usuario.getMatricula();
         this.tipoUsuario = usuario.getTipoUsuario().getNome(); // Extrai o nome do TipoUsuario
+        this.curso = usuario.getCurso() != null ? usuario.getCurso().getNome() : null; // Extrai o nome do Curso
     }
 
-
+    // Getters e Setters
     public String getNome() {
         return nome;
     }
@@ -96,5 +98,13 @@ public class UsuarioDTOResponse {
 
     public void setTipoUsuario(String tipoUsuario) {
         this.tipoUsuario = tipoUsuario;
+    }
+
+    public String getCurso() {
+        return curso;
+    }
+
+    public void setCurso(String curso) {
+        this.curso = curso;
     }
 }

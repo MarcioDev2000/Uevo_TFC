@@ -28,6 +28,8 @@ public class UsuarioDto {
     @Size(max = 20, message = "O NIF deve ter no máximo 20 caracteres")
     private String nif;
 
+    private UUID cursoId;
+
     private UUID especialidade; // UUID da especialidade
 
     @Size(max = 50, message = "A matrícula deve ter no máximo 50 caracteres")
@@ -127,5 +129,13 @@ public class UsuarioDto {
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public UUID getCursoId() {
+        return cursoId;
+    }
+
+    public void setCursoId(UUID cursoId) {
+        this.cursoId = cursoId;
     }
 }
