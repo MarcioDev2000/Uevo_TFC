@@ -1,5 +1,10 @@
 package com.monografia.EvoluTCC.controllers;
 import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
+import com.monografia.EvoluTCC.dto.CursoDTO;
+import com.monografia.EvoluTCC.models.Curso;
+import com.monografia.EvoluTCC.models.Especialidade;
+import com.monografia.EvoluTCC.repositories.CursoRepository;
+import com.monografia.EvoluTCC.repositories.EspecialidadeRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 import com.monografia.EvoluTCC.services.MonografiaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +25,22 @@ public class OrientadorController {
      @Autowired
     private MonografiaService monografiaService;
 
+    @Autowired
+    private CursoRepository cursoRepository;
+
+    @Autowired
+    private EspecialidadeRepository especialidadeRepository;
+
     public OrientadorController(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
+
+@GetMapping("/cursos/{cursoId}/especialidades")
+public ResponseEntity<List<Especialidade>> getEspecialidadesPorCurso(@PathVariable UUID cursoId) {
+    List<Especialidade> especialidades = especialidadeRepository.findByCursoId(cursoId);
+    return ResponseEntity.ok(especialidades);
+}
     
 @GetMapping("/especialidade/{especialidadeId}")
 public ResponseEntity<List<Map<String, Object>>> getOrientadoresPorEspecialidade(@PathVariable UUID especialidadeId) {
@@ -39,6 +56,17 @@ public ResponseEntity<List<Map<String, Object>>> getOrientadoresPorEspecialidade
 
     return ResponseEntity.ok(orientadores);
 }
+
+@GetMapping("/cursos")
+public ResponseEntity<List<CursoDTO>> getCursos() {
+    List<Curso> cursos = cursoRepository.findAll();
+    List<CursoDTO> cursoDTOs = cursos.stream()
+            .map(curso -> new CursoDTO(curso.getId(), curso.getNome()))
+            .collect(Collectors.toList());
+    return ResponseEntity.ok(cursoDTOs);
+}
+
+
 
 @GetMapping("/{orientadorId}/alunos")
 public List<AlunoResponseDTO> getAlunosPorOrientador(@PathVariable UUID orientadorId) {

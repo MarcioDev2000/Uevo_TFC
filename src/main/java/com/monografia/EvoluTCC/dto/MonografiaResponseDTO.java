@@ -15,7 +15,8 @@ public class MonografiaResponseDTO {
     private String orientadorNomeCompleto; 
     private String especialidade;
     private String alunoNomeCompleto;
-    private String descricaoMelhoria; // Novo campo
+    private String descricaoMelhoria;
+    private String cursoNome; // Novo campo
 
     // Getters e Setters
     public UUID getId() {
@@ -120,5 +121,13 @@ public class MonografiaResponseDTO {
 
     public void setLinkTermoDoAluno(String linkTermoDoAluno) {
         this.linkTermoDoAluno = linkTermoDoAluno;
+    }
+
+    public String getCursoNome() {
+        return cursoNome;
+    }
+
+    public void setCursoNome(String cursoNome) {
+        this.cursoNome = cursoNome;
     }
 }

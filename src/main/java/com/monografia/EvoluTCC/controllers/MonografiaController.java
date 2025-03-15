@@ -1,9 +1,13 @@
 package com.monografia.EvoluTCC.controllers;
 
+import com.monografia.EvoluTCC.models.Curso;
+import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.models.Monografia;
-import com.monografia.EvoluTCC.models.Usuario;
+import com.monografia.EvoluTCC.repositories.CursoRepository;
+import com.monografia.EvoluTCC.repositories.EspecialidadeRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
+import com.monografia.EvoluTCC.dto.CursoDTO;
 import com.monografia.EvoluTCC.dto.MonografiaResponseDTO;
 import com.monografia.EvoluTCC.services.MonografiaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,52 +34,83 @@ public class MonografiaController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private CursoRepository cursoRepository;
+
+    @Autowired
+    private EspecialidadeRepository especialidadeRepository;
+
     // Criar uma nova monografia
     @PostMapping("/create/")
-public ResponseEntity<Monografia> createMonografia(
-        @RequestParam("tema") String tema,
-        @RequestParam("especialidadeId") UUID especialidadeId,
-        @RequestParam("orientadorId") UUID orientadorId,
-        @RequestParam("extratoBancario") MultipartFile extratoBancario,
-        @RequestParam("declaracaoNotas") MultipartFile declaracaoNotas,
-        @RequestParam("termoOrientador") MultipartFile termoOrientador,
-        @RequestParam("projeto") MultipartFile projeto,
-        @RequestParam("documentoBi") MultipartFile documentoBi,
-        @RequestParam("termoDoAluno") MultipartFile termoDoAluno, 
-        @RequestParam("alunoId") UUID alunoId) throws IOException {
+    public ResponseEntity<Monografia> createMonografia(
+            @RequestParam("tema") String tema,
+            @RequestParam("especialidadeId") UUID especialidadeId,
+            @RequestParam("orientadorId") UUID orientadorId,
+            @RequestParam("extratoBancario") MultipartFile extratoBancario,
+            @RequestParam("declaracaoNotas") MultipartFile declaracaoNotas,
+            @RequestParam("termoOrientador") MultipartFile termoOrientador,
+            @RequestParam("projeto") MultipartFile projeto,
+            @RequestParam("documentoBi") MultipartFile documentoBi,
+            @RequestParam("termoDoAluno") MultipartFile termoDoAluno, 
+            @RequestParam("alunoId") UUID alunoId,
+            @RequestParam("cursoId") UUID cursoId) throws IOException {
+    
+        Monografia monografia = monografiaService.createMonografia(
+                tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi,
+                termoDoAluno, alunoId, orientadorId, especialidadeId, cursoId);
+    
+        return ResponseEntity.ok(monografia);
+    }
 
-    Monografia monografia = monografiaService.createMonografia(
-            tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi,
-            termoDoAluno, alunoId, orientadorId, especialidadeId);
+    // Atualizar monografia com correções
+    @PutMapping("/{id}")
+public ResponseEntity<Monografia> updateMonografia(
+        @PathVariable UUID id,
+        @RequestParam(value = "tema", required = false) String tema,
+        @RequestParam(value = "extratoBancario", required = false) MultipartFile extratoBancario,
+        @RequestParam(value = "termoOrientador", required = false) MultipartFile termoOrientador,
+        @RequestParam(value = "declaracaoNotas", required = false) MultipartFile declaracaoNotas,
+        @RequestParam(value = "projeto", required = false) MultipartFile projeto,
+        @RequestParam(value = "documentoBi", required = false) MultipartFile documentoBi,
+        @RequestParam(value = "termoDoAluno", required = false) MultipartFile termoDoAluno,
+        @RequestParam(value = "cursoId", required = false) UUID cursoId) throws IOException {
 
+    Monografia monografia = monografiaService.updateMonografia(
+            id, tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi, termoDoAluno, cursoId);
 
     return ResponseEntity.ok(monografia);
 }
 
-    // Atualizar monografia com correções
-    @PutMapping("/{id}")
-    public ResponseEntity<Monografia> updateMonografia(
-            @PathVariable UUID id,
-            @RequestParam(value = "tema", required = false) String tema,
-            @RequestParam(value = "extratoBancario", required = false) MultipartFile extratoBancario,
-            @RequestParam(value = "termoOrientador", required = false) MultipartFile termoOrientador,
-            @RequestParam(value = "declaracaoNotas", required = false) MultipartFile declaracaoNotas,
-            @RequestParam(value = "projeto", required = false) MultipartFile projeto,
-            @RequestParam(value = "documentoBi", required = false) MultipartFile documentoBi,
-            @RequestParam(value = "termoDoAluno", required = false) MultipartFile termoDoAluno) throws IOException {
+@GetMapping("/cursos/{cursoId}/especialidades")
+public ResponseEntity<List<Especialidade>> getEspecialidadesPorCurso(@PathVariable UUID cursoId) {
+    List<Especialidade> especialidades = especialidadeRepository.findByCursoId(cursoId);
+    return ResponseEntity.ok(especialidades);
+}
+    
+@GetMapping("/especialidade/{especialidadeId}")
+public ResponseEntity<List<Map<String, Object>>> getOrientadoresPorEspecialidade(@PathVariable UUID especialidadeId) {
+    // Busca os usuários do tipo "Orientador" associados à especialidade
+    List<Map<String, Object>> orientadores = usuarioRepository
+            .findByEspecialidadeIdAndTipoUsuarioNome(especialidadeId, "Orientador")
+            .stream()
+            .map(orientador -> Map.<String, Object>of(
+                    "id", orientador.getId(), // Adiciona o UUID do orientador
+                    "nomeCompleto", orientador.getNome() + " " + orientador.getSobrenome()
+            ))
+            .collect(Collectors.toList());
 
-       
-    Monografia monografia = monografiaService.updateMonografia(
-        id, tema, extratoBancario, termoOrientador, declaracaoNotas, projeto, documentoBi, termoDoAluno);
-
-return ResponseEntity.ok(monografia);
-    }
-
-    @GetMapping("/orientadores/{especialidadeId}")
-public ResponseEntity<List<Usuario>> getOrientadoresPorEspecialidade(@PathVariable UUID especialidadeId) {
-    List<Usuario> orientadores = usuarioRepository.findByEspecialidadeIdAndTipoUsuarioNome(especialidadeId, "Orientador");
     return ResponseEntity.ok(orientadores);
 }
+
+@GetMapping("/cursos")
+public ResponseEntity<List<CursoDTO>> getCursos() {
+    List<Curso> cursos = cursoRepository.findAll();
+    List<CursoDTO> cursoDTOs = cursos.stream()
+            .map(curso -> new CursoDTO(curso.getId(), curso.getNome()))
+            .collect(Collectors.toList());
+    return ResponseEntity.ok(cursoDTOs);
+}
+
 
     // Revisão do Orientador
     @PutMapping("/{monografiaId}/revisao-orientador")

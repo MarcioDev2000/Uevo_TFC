@@ -5,12 +5,11 @@ import java.util.UUID;
 public class CursoDTO {
     private UUID id;
     private String nome;
-    private String descricao;
 
-    public CursoDTO(UUID id, String nome, String descricao) {
+
+    public CursoDTO(UUID id, String nome) {
         this.id = id;
         this.nome = nome;
-        this.descricao = descricao;
     }
 
     public UUID getId() {
@@ -19,9 +18,5 @@ public class CursoDTO {
 
     public String getNome() {
         return nome;
-    }
-
-    public String getDescricao() {
-        return descricao;
     }
 }

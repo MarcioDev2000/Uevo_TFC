@@ -22,6 +22,10 @@ public class Monografia {
     private Usuario admin;
 
     @ManyToOne
+    @JoinColumn(name = "curso_id", nullable = false)
+    private Curso curso;
+
+    @ManyToOne
     @JoinColumn(name = "orientador_id", nullable = false)
     private Usuario orientador;
 
@@ -205,6 +209,14 @@ this.dataStatus = LocalDateTime.now();
 
     public Usuario getAdmin() {
         return admin;
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
     }
     
     public void setAdmin(Usuario admin) {

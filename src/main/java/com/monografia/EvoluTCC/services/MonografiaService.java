@@ -3,6 +3,7 @@ package com.monografia.EvoluTCC.services;
 import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.producers.UserProducer;
+import com.monografia.EvoluTCC.models.Curso;
 import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
 import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
@@ -12,6 +13,7 @@ import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 
 import jakarta.transaction.Transactional;
 
+import com.monografia.EvoluTCC.repositories.CursoRepository;
 import com.monografia.EvoluTCC.repositories.EspecialidadeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,9 @@ public class MonografiaService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private CursoRepository cursoRepository;
+
+    @Autowired
     private EspecialidadeRepository especialidadeRepository;
 
     @Autowired
@@ -48,7 +53,11 @@ public class MonografiaService {
     public Monografia createMonografia(String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
                                   MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi,
                                   MultipartFile termoDoAluno,
-                                  UUID alunoId, UUID orientadorId, UUID especialidadeId) throws IOException {
+                                  UUID alunoId, UUID orientadorId, UUID especialidadeId, UUID cursoId) throws IOException {
+
+    // Verifica se o curso existe
+    Curso curso = cursoRepository.findById(cursoId)
+            .orElseThrow(() -> new RuntimeException("Curso não encontrado com o ID: " + cursoId));
 
     // Verifica se o aluno já possui uma monografia cadastrada
     boolean alunoJaPossuiMonografia = monografiaRepository.existsByAlunoId(alunoId);
@@ -66,7 +75,6 @@ public class MonografiaService {
     if (alunosOrientados >= 10) {
         throw new RuntimeException("O orientador já atingiu o limite de 10 alunos. Escolha outro orientador.");
     }
-
 
     // Valida os documentos
     validarDocumento(extratoBancario);
@@ -105,6 +113,7 @@ public class MonografiaService {
     monografia.setAluno(aluno);
     monografia.setOrientador(orientador);
     monografia.setEspecialidade(especialidade);
+    monografia.setCurso(curso); // Adiciona o curso
     monografia.setDataStatus(LocalDateTime.now());
 
     Monografia savedMonografia = monografiaRepository.save(monografia);
@@ -115,45 +124,54 @@ public class MonografiaService {
     return savedMonografia;
 }
 
-    // Atualiza a monografia com correções do aluno
-    public Monografia updateMonografia(UUID id, String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
-                                      MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi, MultipartFile termoDoAluno) throws IOException {
-        Monografia monografia = getMonografiaById(id);
-        if (tema != null) monografia.setTema(tema);
-        if (extratoBancario != null && !extratoBancario.isEmpty()) {
-            validarDocumento(extratoBancario);
-            monografia.setExtratoBancario(extratoBancario.getBytes());
-        }
-        if (termoOrientador != null && !termoOrientador.isEmpty()) {
-            validarDocumento(termoOrientador);
-            monografia.setTermoOrientador(termoOrientador.getBytes());
-        }
-        if (declaracaoNotas != null && !declaracaoNotas.isEmpty()) {
-            validarDocumento(declaracaoNotas);
-            monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
-        }
-        if (projeto != null && !projeto.isEmpty()) {
-            validarDocumento(projeto);
-            monografia.setProjeto(projeto.getBytes());
-        }
-        if (documentoBi != null && !documentoBi.isEmpty()) {
-            validarDocumento(documentoBi);
-            monografia.setDocumentoBi(documentoBi.getBytes());
-        }
-        if (termoDoAluno != null && !termoDoAluno.isEmpty()) {
-            validarDocumento(termoDoAluno);
-            monografia.setTermoDoAluno(termoDoAluno.getBytes());
-        }
+public Monografia updateMonografia(UUID id, String tema, MultipartFile extratoBancario, MultipartFile termoOrientador,
+MultipartFile declaracaoNotas, MultipartFile projeto, MultipartFile documentoBi, 
+MultipartFile termoDoAluno, UUID cursoId) throws IOException {
+Monografia monografia = getMonografiaById(id);
 
-        // Altera o status para PENDENTE após correções
-        monografia.setStatus(StatusMonografia.PENDENTE);
-        Monografia updatedMonografia = monografiaRepository.save(monografia);
+if (tema != null) monografia.setTema(tema);
 
-        // Notifica o orientador sobre a atualização
-        userProducer.notifyOrientador(updatedMonografia);
+if (extratoBancario != null && !extratoBancario.isEmpty()) {
+validarDocumento(extratoBancario);
+monografia.setExtratoBancario(extratoBancario.getBytes());
+}
+if (termoOrientador != null && !termoOrientador.isEmpty()) {
+validarDocumento(termoOrientador);
+monografia.setTermoOrientador(termoOrientador.getBytes());
+}
+if (declaracaoNotas != null && !declaracaoNotas.isEmpty()) {
+validarDocumento(declaracaoNotas);
+monografia.setDeclaracaoNotas(declaracaoNotas.getBytes());
+}
+if (projeto != null && !projeto.isEmpty()) {
+validarDocumento(projeto);
+monografia.setProjeto(projeto.getBytes());
+}
+if (documentoBi != null && !documentoBi.isEmpty()) {
+validarDocumento(documentoBi);
+monografia.setDocumentoBi(documentoBi.getBytes());
+}
+if (termoDoAluno != null && !termoDoAluno.isEmpty()) {
+validarDocumento(termoDoAluno);
+monografia.setTermoDoAluno(termoDoAluno.getBytes());
+}
 
-        return updatedMonografia;
-    }
+// Atualiza o curso, se necessário
+if (cursoId != null) {
+Curso curso = cursoRepository.findById(cursoId)
+.orElseThrow(() -> new RuntimeException("Curso não encontrado com o ID: " + cursoId));
+monografia.setCurso(curso);
+}
+
+// Altera o status para PENDENTE após correções
+monografia.setStatus(StatusMonografia.PENDENTE);
+Monografia updatedMonografia = monografiaRepository.save(monografia);
+
+// Notifica o orientador sobre a atualização
+userProducer.notifyOrientador(updatedMonografia);
+
+return updatedMonografia;
+}
 
    
     public Monografia reviewMonografia(UUID monografiaId, StatusMonografia novoStatus, String descricao, UUID orientadorId) {
@@ -223,15 +241,21 @@ public class MonografiaService {
         dto.setLinkProjeto(monografia.getLinkProjeto());
         dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
         dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
-        dto.setDescricaoMelhoria(monografia.getDescricaoMelhoria()); // Mapeia a descrição
+        dto.setDescricaoMelhoria(monografia.getDescricaoMelhoria());
+    
         Usuario orientador = monografia.getOrientador();
         String nomeCompleto = orientador.getNome() + " " + orientador.getSobrenome();
         dto.setOrientadorNomeCompleto(nomeCompleto);
+    
         Especialidade especialidade = monografia.getEspecialidade();
         dto.setEspecialidade(especialidade.getNome());
+    
         Usuario aluno = monografia.getAluno();
         String alunoNomeCompleto = aluno.getNome() + " " + aluno.getSobrenome();
         dto.setAlunoNomeCompleto(alunoNomeCompleto);
+    
+        // Adiciona o nome do curso
+        dto.setCursoNome(monografia.getCurso().getNome());
     
         return dto;
     }
@@ -297,6 +321,7 @@ private void adicionarLinksDocumentos(Monografia monografia) {
     }
 
     // Métodos auxiliares
+    @SuppressWarnings("null")
     private void validarDocumento(MultipartFile documento) {
         if (documento != null && !documento.isEmpty()) {
             if (!documento.getContentType().equals("application/pdf")) {
