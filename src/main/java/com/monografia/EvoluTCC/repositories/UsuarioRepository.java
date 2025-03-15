@@ -18,5 +18,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     List<Usuario> findByTipoUsuario_Nome(String nome);
     long countByTipoUsuarioNome(String nome);
     List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);
+    List<Usuario> findByStatusFalse();
     
 }

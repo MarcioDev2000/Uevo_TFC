@@ -33,6 +33,9 @@ public class Usuario {
     @Column(length = 20, unique = true)
     private String nif;
 
+    @Column(nullable = false)
+    private boolean status = false;
+
     @ManyToOne
     @JoinColumn(name = "especialidade_id",  nullable = true)
     private Especialidade especialidade;
@@ -55,18 +58,19 @@ public class Usuario {
 
     // Construtor com parâmetros
     public Usuario(String password, String nome, String sobrenome, String endereco, String telefone,
-                   String email, String nif, Especialidade especialidade, String matricula, TipoUsuario tipoUsuario) {
-        this.password = password;
-        this.nome = nome;
-        this.sobrenome = sobrenome;
-        this.endereco = endereco;
-        this.telefone = telefone;
-        this.email = email;
-        this.nif = nif;
-        this.especialidade = especialidade;
-        this.matricula = matricula;
-        this.tipoUsuario = tipoUsuario;
-    }
+    String email, String nif, Especialidade especialidade, String matricula, TipoUsuario tipoUsuario) {
+this.password = password;
+this.nome = nome;
+this.sobrenome = sobrenome;
+this.endereco = endereco;
+this.telefone = telefone;
+this.email = email;
+this.nif = nif;
+this.especialidade = especialidade;
+this.matricula = matricula;
+this.tipoUsuario = tipoUsuario;
+this.status = false; // Por padrão, a conta é desativada
+}
 
 
     // Getters e Setters
@@ -172,5 +176,13 @@ public class Usuario {
 
     public void setTokenExpirationDate(Date tokenExpirationDate) {
         this.tokenExpirationDate = tokenExpirationDate;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

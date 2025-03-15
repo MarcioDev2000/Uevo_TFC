@@ -39,6 +39,7 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Calendário", "icon-calendar-60", "/admin/calendario", tipo));
                 menus.add(new Menus("Marcar Pré-Defesa", "icon-calendar-60", "/admin/pre-defesa", tipo));
                 menus.add(new Menus("Marcar Defesa", "icon-calendar-60", "/admin/defesa", tipo));
+                menus.add(new Menus("Usuarios", "icon-single-02", "/admin/user-inativos", tipo));
             });
 
             aluno.ifPresent(tipo -> {

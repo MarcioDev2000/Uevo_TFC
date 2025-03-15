@@ -36,6 +36,8 @@ public class UsuarioDto {
     @NotBlank(message = "A senha é obrigatória")
     private String password;
 
+    private boolean status;
+
     private UUID tipoUsuario;
 
     // Getters e Setters
@@ -117,5 +119,13 @@ public class UsuarioDto {
 
     public void setTipoUsuario(UUID tipoUsuario) {
         this.tipoUsuario = tipoUsuario;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

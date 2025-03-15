@@ -31,36 +31,44 @@ public class AuthenticationController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/login/")
-    public ResponseEntity<?> loginUser(@RequestBody UsuarioDto usuarioDto) {
-        try {
-            // Autentica o usuário
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(usuarioDto.getEmail(), usuarioDto.getPassword())
-            );
+public ResponseEntity<?> loginUser(@RequestBody UsuarioDto usuarioDto) {
+    try {
+        // Busca o usuário no banco de dados antes da autenticação
+        Usuario userModel = usuarioService.findUserByEmail(usuarioDto.getEmail());
 
-            // Gera o token JWT
-            String token = jwtUtil.gerarToken(usuarioDto.getEmail());
-
-            // Busca o usuário no banco de dados
-            Usuario userModel = usuarioService.findUserByEmail(usuarioDto.getEmail());
-
-            // Prepara a resposta com os dados do usuário e o token
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", userModel.getId());
-            response.put("nome", userModel.getNome());
-            response.put("email", userModel.getEmail());
-            response.put("tipo_de_entidade", userModel.getTipoUsuario().getNome());
-            response.put("tipo_de_entidade_id", userModel.getTipoUsuario().getId());
-            response.put("rota", userModel.getTipoUsuario().getRota());
-            response.put("token", token);
-
-            return ResponseEntity.ok(response);
-        } catch (AuthenticationException e) {
+        // Verifica se o usuário existe e se sua conta está ativa
+        if (userModel == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciais inválidas"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
+        } else if (!userModel.isStatus()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Sua conta ainda não foi ativada. Entre em contato com o administrador."));
         }
+
+        // Autentica o usuário
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(usuarioDto.getEmail(), usuarioDto.getPassword())
+        );
+
+        // Gera o token JWT
+        String token = jwtUtil.gerarToken(usuarioDto.getEmail());
+
+        // Prepara a resposta com os dados do usuário e o token
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", userModel.getId());
+        response.put("nome", userModel.getNome());
+        response.put("email", userModel.getEmail());
+        response.put("tipo_de_entidade", userModel.getTipoUsuario().getNome());
+        response.put("tipo_de_entidade_id", userModel.getTipoUsuario().getId());
+        response.put("rota", userModel.getTipoUsuario().getRota());
+        response.put("token", token);
+
+        return ResponseEntity.ok(response);
+    } catch (AuthenticationException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciais inválidas"));
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
     }
+}
+
 
     @PostMapping("/email-redefinir-palavra-passe/")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {

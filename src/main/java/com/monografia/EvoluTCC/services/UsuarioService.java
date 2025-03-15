@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.monografia.EvoluTCC.config.JwtUtil;
 import com.monografia.EvoluTCC.dto.UsuarioDTOResponse;
 import com.monografia.EvoluTCC.dto.UsuarioDto;
+import com.monografia.EvoluTCC.dto.userAllDTO;
 import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.models.TipoUsuario;
 import com.monografia.EvoluTCC.models.Usuario;
@@ -80,7 +81,11 @@ public class UsuarioService {
         usuario.setNif(usuarioDto.getNif());
         usuario.setTipoUsuario(tipoUsuario); // Define o TipoUsuario
         usuario.setPassword(passwordEncoder.encode(usuarioDto.getPassword()));
-
+        if (tipoUsuario.getNome().equalsIgnoreCase("Admin")) {
+            usuario.setStatus(true);
+        } else {
+            usuario.setStatus(false); // Por padrão, a conta é desativada
+        }
         // Define especialidade, se fornecida
         if (especialidade != null) {
             usuario.setEspecialidade(especialidade);
@@ -167,6 +172,17 @@ public UsuarioDto atualizarUsuarioCompleto(UUID id, UsuarioDto usuarioDto) {
     }
 
     @Transactional
+    public void atualizarStatusUsuario(UUID id, boolean status) {
+        // Busca o usuário pelo ID
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+
+        // Atualiza apenas o campo status
+        usuario.setStatus(status);
+        usuarioRepository.save(usuario);
+    }
+
+    @Transactional
     public void forgotPassword(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com este email."));
@@ -237,6 +253,26 @@ public List<UsuarioDTOResponse> listarTodosOrientadores(UUID adminId) {
             .map(UsuarioDTOResponse::new) // Mapeia para DTO
             .collect(Collectors.toList());
 }
+
+@Transactional
+public List<userAllDTO> listarUsuariosInativos(UUID adminId) {
+    // Verifica se o usuário é um admin
+    Usuario admin = usuarioRepository.findById(adminId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + adminId));
+
+    if (!"Admin".equals(admin.getTipoUsuario().getNome())) {
+        throw new RuntimeException("Apenas usuários do tipo Admin podem acessar essa lista.");
+    }
+
+    // Busca todos os usuários com status false
+    List<Usuario> usuariosInativos = usuarioRepository.findByStatusFalse();
+
+    // Converte a lista de Usuario para userAllDTO
+    return usuariosInativos.stream()
+            .map(userAllDTO::new)
+            .collect(Collectors.toList());
+}
+
 
 
 }

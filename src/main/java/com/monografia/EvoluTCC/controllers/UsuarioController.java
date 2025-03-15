@@ -1,6 +1,7 @@
 package com.monografia.EvoluTCC.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -8,11 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import com.monografia.EvoluTCC.dto.UsuarioDTOResponse;
 import com.monografia.EvoluTCC.dto.UsuarioDto;
+import com.monografia.EvoluTCC.dto.userAllDTO;
 import com.monografia.EvoluTCC.models.Usuario;
 import com.monografia.EvoluTCC.services.UsuarioService;
+
 
 import jakarta.validation.Valid;
 
@@ -22,6 +24,8 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+
 
     @PostMapping("/")
     public ResponseEntity<?> criarUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
@@ -34,6 +38,32 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao criar usuário.");
         }
     }
+
+
+    @GetMapping("/inativos")
+public ResponseEntity<List<userAllDTO>> listarUsuariosInativos(@RequestParam UUID adminId) {
+    try {
+        List<userAllDTO> usuariosInativos = usuarioService.listarUsuariosInativos(adminId);
+        return ResponseEntity.ok(usuariosInativos);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
+
+@PatchMapping("/{id}/status") // Usando PATCH para atualizar apenas o status
+public ResponseEntity<?> atualizarStatusUsuario(@PathVariable UUID id, @RequestParam boolean status) {
+    try {
+        // Chama o método do Service para atualizar o status
+        usuarioService.atualizarStatusUsuario(id, status);
+
+        return ResponseEntity.ok(Map.of("message", "Status da conta atualizado com sucesso."));
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+    }
+}
+
 
     @GetMapping
     public ResponseEntity<List<Usuario>> listarTodosUsuarios() {
