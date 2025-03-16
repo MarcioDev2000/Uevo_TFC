@@ -2,25 +2,36 @@ package com.monografia.EvoluTCC.dto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 import com.monografia.EvoluTCC.Enums.StatusDefesa;
+import com.monografia.EvoluTCC.Enums.StatusMonografia;
 
 public class PreDefesaResponseDTO {
     private UUID id;
     private UUID monografiaId;
     private String temaMonografia;
-    private String alunoNomeCompleto; 
-    private String especialidadeNome; 
-    private String orientadorNomeCompleto; 
     private LocalDateTime dataInicio;
     private LocalDateTime dataFim;
-    private UUID presidenteId;
-    private String presidenteNomeCompleto; // Nome + Sobrenome do presidente
-    private UUID vogalId;
-    private String vogalNomeCompleto; // Nome + Sobrenome do vogal
-    private StatusDefesa status;
     private String descricao;
+    private UUID presidenteId;
+    private String presidenteNomeCompleto;
+    private UUID vogalId;
+    private String vogalNomeCompleto;
+    private String alunoNomeCompleto;
+    private String especialidadeNome;
+    private String orientadorNomeCompleto;
+    private StatusMonografia statusMonografia;
+    private StatusDefesa status;
 
-    // Getters and Setters
+    // Links para os documentos da monografia
+    private String linkExtratoBancario;
+    private String linkTermoOrientador;
+    private String linkDeclaracaoNotas;
+    private String linkProjeto;
+    private String linkDocumentoBi;
+    private String linkTermoDoAluno;
+
+    // Getters e Setters
     public UUID getId() {
         return id;
     }
@@ -43,6 +54,62 @@ public class PreDefesaResponseDTO {
 
     public void setTemaMonografia(String temaMonografia) {
         this.temaMonografia = temaMonografia;
+    }
+
+    public LocalDateTime getDataInicio() {
+        return dataInicio;
+    }
+
+    public void setDataInicio(LocalDateTime dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public LocalDateTime getDataFim() {
+        return dataFim;
+    }
+
+    public void setDataFim(LocalDateTime dataFim) {
+        this.dataFim = dataFim;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public UUID getPresidenteId() {
+        return presidenteId;
+    }
+
+    public void setPresidenteId(UUID presidenteId) {
+        this.presidenteId = presidenteId;
+    }
+
+    public String getPresidenteNomeCompleto() {
+        return presidenteNomeCompleto;
+    }
+
+    public void setPresidenteNomeCompleto(String presidenteNomeCompleto) {
+        this.presidenteNomeCompleto = presidenteNomeCompleto;
+    }
+
+    public UUID getVogalId() {
+        return vogalId;
+    }
+
+    public void setVogalId(UUID vogalId) {
+        this.vogalId = vogalId;
+    }
+
+    public String getVogalNomeCompleto() {
+        return vogalNomeCompleto;
+    }
+
+    public void setVogalNomeCompleto(String vogalNomeCompleto) {
+        this.vogalNomeCompleto = vogalNomeCompleto;
     }
 
     public String getAlunoNomeCompleto() {
@@ -69,52 +136,60 @@ public class PreDefesaResponseDTO {
         this.orientadorNomeCompleto = orientadorNomeCompleto;
     }
 
-    public LocalDateTime getDataInicio() {
-        return dataInicio;
+    public StatusMonografia getStatusMonografia() {
+        return statusMonografia;
     }
 
-    public void setDataInicio(LocalDateTime dataInicio) {
-        this.dataInicio = dataInicio;
+    public void setStatusMonografia(StatusMonografia statusMonografia) {
+        this.statusMonografia = statusMonografia;
     }
 
-    public LocalDateTime getDataFim() {
-        return dataFim;
+    public String getLinkExtratoBancario() {
+        return linkExtratoBancario;
     }
 
-    public void setDataFim(LocalDateTime dataFim) {
-        this.dataFim = dataFim;
+    public void setLinkExtratoBancario(String linkExtratoBancario) {
+        this.linkExtratoBancario = linkExtratoBancario;
     }
 
-    public UUID getPresidenteId() {
-        return presidenteId;
+    public String getLinkTermoOrientador() {
+        return linkTermoOrientador;
     }
 
-    public void setPresidenteId(UUID presidenteId) {
-        this.presidenteId = presidenteId;
+    public void setLinkTermoOrientador(String linkTermoOrientador) {
+        this.linkTermoOrientador = linkTermoOrientador;
     }
 
-    public String getPresidenteNomeCompleto() {
-        return presidenteNomeCompleto;
+    public String getLinkDeclaracaoNotas() {
+        return linkDeclaracaoNotas;
     }
 
-    public void setPresidenteNomeCompleto(String presidenteNome, String presidenteSobrenome) {
-        this.presidenteNomeCompleto = presidenteNome + " " + presidenteSobrenome;
+    public void setLinkDeclaracaoNotas(String linkDeclaracaoNotas) {
+        this.linkDeclaracaoNotas = linkDeclaracaoNotas;
     }
 
-    public UUID getVogalId() {
-        return vogalId;
+    public String getLinkProjeto() {
+        return linkProjeto;
     }
 
-    public void setVogalId(UUID vogalId) {
-        this.vogalId = vogalId;
+    public void setLinkProjeto(String linkProjeto) {
+        this.linkProjeto = linkProjeto;
     }
 
-    public String getVogalNomeCompleto() {
-        return vogalNomeCompleto;
+    public String getLinkDocumentoBi() {
+        return linkDocumentoBi;
     }
 
-    public void setVogalNomeCompleto(String vogalNome, String vogalSobrenome) {
-        this.vogalNomeCompleto = vogalNome + " " + vogalSobrenome;
+    public void setLinkDocumentoBi(String linkDocumentoBi) {
+        this.linkDocumentoBi = linkDocumentoBi;
+    }
+
+    public String getLinkTermoDoAluno() {
+        return linkTermoDoAluno;
+    }
+
+    public void setLinkTermoDoAluno(String linkTermoDoAluno) {
+        this.linkTermoDoAluno = linkTermoDoAluno;
     }
 
     public StatusDefesa getStatus() {
@@ -123,13 +198,5 @@ public class PreDefesaResponseDTO {
 
     public void setStatus(StatusDefesa status) {
         this.status = status;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
     }
 }

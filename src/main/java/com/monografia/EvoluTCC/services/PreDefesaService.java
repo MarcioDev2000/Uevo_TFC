@@ -1,6 +1,7 @@
 package com.monografia.EvoluTCC.services;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -138,6 +139,9 @@ public List<PreDefesaResponseDTO> listarTodasPreDefesasMarcadas() {
             .collect(Collectors.toList());
 }
 
+public List<Monografia> listarMonografiasEmPreDefesa() {
+    return monografiaRepository.findByStatus(StatusMonografia.EM_PRE_DEFESA);
+}
 
 private PreDefesaResponseDTO toDTO(PreDefesa preDefesa) {
     PreDefesaResponseDTO dto = new PreDefesaResponseDTO();
@@ -148,14 +152,22 @@ private PreDefesaResponseDTO toDTO(PreDefesa preDefesa) {
     dto.setDataFim(preDefesa.getDataFim());
     dto.setDescricao(preDefesa.getDescricao());
     dto.setPresidenteId(preDefesa.getPresidente().getId());
-    dto.setPresidenteNomeCompleto(preDefesa.getPresidente().getNome(), preDefesa.getPresidente().getSobrenome());
+    dto.setPresidenteNomeCompleto(preDefesa.getPresidente().getNome() + " " + preDefesa.getPresidente().getSobrenome());
     dto.setVogalId(preDefesa.getVogal().getId());
-    dto.setVogalNomeCompleto(preDefesa.getVogal().getNome(), preDefesa.getVogal().getSobrenome());
+    dto.setVogalNomeCompleto(preDefesa.getVogal().getNome() + " " + preDefesa.getVogal().getSobrenome());
     dto.setAlunoNomeCompleto(preDefesa.getMonografia().getAluno().getNome() + " " + preDefesa.getMonografia().getAluno().getSobrenome());
     dto.setEspecialidadeNome(preDefesa.getMonografia().getEspecialidade().getNome());
     dto.setOrientadorNomeCompleto(preDefesa.getMonografia().getOrientador().getNome() + " " + preDefesa.getMonografia().getOrientador().getSobrenome());
-
+    dto.setStatusMonografia(preDefesa.getMonografia().getStatus());
     dto.setStatus(preDefesa.getStatus());
+
+    // Adiciona os links dos documentos da monografia
+    dto.setLinkExtratoBancario(preDefesa.getMonografia().getLinkExtratoBancario());
+    dto.setLinkTermoOrientador(preDefesa.getMonografia().getLinkTermoOrientador());
+    dto.setLinkDeclaracaoNotas(preDefesa.getMonografia().getLinkDeclaracaoNotas());
+    dto.setLinkProjeto(preDefesa.getMonografia().getLinkProjeto());
+    dto.setLinkDocumentoBi(preDefesa.getMonografia().getLinkDocumentoBi());
+    dto.setLinkTermoDoAluno(preDefesa.getMonografia().getLinkTermoDoAluno());
 
     return dto;
 }
@@ -316,6 +328,136 @@ public List<PreDefesaResponseDTO> listarTodasPreDefesas() {
     return preDefesas.stream()
             .map(this::toDTO)
             .collect(Collectors.toList());
+}
+
+public List<PreDefesaResponseDTO> listarPreDefesasDoUsuarioFiltradas(UUID usuarioId) {
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    List<PreDefesa> preDefesas;
+
+    // Verifica o tipo do usuário
+    String tipoUsuario = usuario.getTipoUsuario().getNome(); // Acessa o nome do tipo de usuário
+
+    if (tipoUsuario.equals("Aluno")) {
+        // Busca as pré-defesas onde o aluno é o autor da monografia
+        preDefesas = preDefesaRepository.findByMonografiaAlunoId(usuarioId);
+    } else if (tipoUsuario.equals("Orientador")) {
+        // Busca as pré-defesas onde o usuário é orientador da monografia
+        preDefesas = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+    } else if (tipoUsuario.equals("Presidente") || tipoUsuario.equals("Vogal")) {
+        // Busca as pré-defesas onde o usuário é presidente ou vogal
+        preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
+    } else {
+        // Caso o tipo de usuário não seja reconhecido, retorna uma lista vazia
+        preDefesas = Collections.emptyList();
+    }
+
+    // Filtra as pré-defesas com status EM_PRE_DEFESA
+    preDefesas = preDefesas.stream()
+            .filter(preDefesa -> preDefesa.getMonografia().getStatus() == StatusMonografia.EM_PRE_DEFESA)
+            .collect(Collectors.toList());
+
+    // Converte as pré-defesas para DTOs
+    return preDefesas.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+}
+
+public List<PreDefesaResponseDTO> listarPreDefesasComStatusPreMonografia(UUID usuarioId) {
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    List<PreDefesa> preDefesas;
+
+    // Verifica o tipo do usuário
+    String tipoUsuario = usuario.getTipoUsuario().getNome(); // Acessa o nome do tipo de usuário
+
+    if (tipoUsuario.equals("Orientador")) {
+        // Busca as pré-defesas onde o usuário é orientador da monografia
+        preDefesas = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+    } else if (tipoUsuario.equals("Presidente") || tipoUsuario.equals("Vogal")) {
+        // Busca as pré-defesas onde o usuário é presidente ou vogal
+        preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
+    } else {
+        // Caso o tipo de usuário não seja reconhecido, retorna uma lista vazia
+        preDefesas = Collections.emptyList();
+    }
+
+    // Filtra as pré-defesas onde a monografia está com status EM_PRE_DEFESA
+    preDefesas = preDefesas.stream()
+            .filter(preDefesa -> preDefesa.getMonografia().getStatus() == StatusMonografia.EM_PRE_DEFESA)
+            .collect(Collectors.toList());
+
+    // Converte as pré-defesas para DTOs
+    return preDefesas.stream()
+    .map(preDefesa -> {
+        PreDefesaResponseDTO dto = toDTO(preDefesa);
+        // Adiciona os links dos documentos da monografia ao DTO
+        Monografia monografia = preDefesa.getMonografia();
+        DocumentoUtils.adicionarLinksDocumentos(monografia); // Usando a classe utilitária
+        dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+        dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+        dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+        dto.setLinkProjeto(monografia.getLinkProjeto());
+        dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+        dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
+        return dto;
+    })
+    .collect(Collectors.toList());
+}
+
+@Transactional
+public PreDefesaResponseDTO detalharPreDefesaPorIdEUsuario(UUID preDefesaId, UUID usuarioId) {
+    // Busca a pré-defesa pelo ID
+    PreDefesa preDefesa = preDefesaRepository.findById(preDefesaId)
+            .orElseThrow(() -> new RuntimeException("Pré-defesa não encontrada com o ID: " + preDefesaId));
+
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    // Verifica se o usuário tem permissão para visualizar a pré-defesa
+    boolean podeVisualizar = false;
+
+    // Verifica se o usuário é o aluno associado à monografia
+    if (usuario.getId().equals(preDefesa.getMonografia().getAluno().getId())) {
+        podeVisualizar = true;
+    }
+    // Verifica se o usuário é o orientador associado à monografia
+    else if (usuario.getId().equals(preDefesa.getMonografia().getOrientador().getId())) {
+        podeVisualizar = true;
+    }
+    // Verifica se o usuário é o presidente da pré-defesa
+    else if (usuario.getId().equals(preDefesa.getPresidente().getId())) {
+        podeVisualizar = true;
+    }
+    // Verifica se o usuário é o vogal da pré-defesa
+    else if (usuario.getId().equals(preDefesa.getVogal().getId())) {
+        podeVisualizar = true;
+    }
+
+    // Se o usuário não tiver permissão, lança uma exceção
+    if (!podeVisualizar) {
+        throw new RuntimeException("Você não tem permissão para visualizar esta pré-defesa.");
+    }
+
+    // Converte a pré-defesa para DTO
+    PreDefesaResponseDTO dto = toDTO(preDefesa);
+
+    // Adiciona os links dos documentos da monografia ao DTO
+    Monografia monografia = preDefesa.getMonografia();
+    DocumentoUtils.adicionarLinksDocumentos(monografia); // Usando a classe utilitária
+    dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+    dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+    dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+    dto.setLinkProjeto(monografia.getLinkProjeto());
+    dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+    dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
+
+    return dto;
 }
 
 }

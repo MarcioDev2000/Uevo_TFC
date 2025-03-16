@@ -48,5 +48,6 @@ public interface PreDefesaRepository extends JpaRepository<PreDefesa, UUID> {
             List<PreDefesa> findByPresidenteIdOrVogalId(
                     @Param("presidenteId") UUID presidenteId,
                     @Param("vogalId") UUID vogalId);
+
         
 }

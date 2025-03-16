@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.monografia.EvoluTCC.Enums.StatusDefesa;
 import com.monografia.EvoluTCC.dto.PreDefesaDTO;
 import com.monografia.EvoluTCC.dto.PreDefesaResponseDTO;
+import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.services.PreDefesaService;
 
 @RestController
@@ -41,12 +42,37 @@ public class PreDefesaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(preDefesaDTO);
     }
 
+    @GetMapping("/preDefesaStatusmonografia/{usuarioId}")
+public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesasComStatusMonografia(@PathVariable UUID usuarioId) {
+    // Chama o serviço para listar as pré-defesas com status da monografia EM_PRE_DEFESA
+    List<PreDefesaResponseDTO> preDefesas = preDefesaService.listarPreDefesasComStatusPreMonografia(usuarioId);
+
+    // Retorna a resposta com a lista de DTOs e o status HTTP 200 (OK)
+    return ResponseEntity.ok(preDefesas);
+}
 
      @GetMapping("/{id}")
     public ResponseEntity<PreDefesaResponseDTO> buscarPreDefesaPorId(@PathVariable UUID id) {
         PreDefesaResponseDTO preDefesaDTO = preDefesaService.buscarPreDefesaPorId(id);
         return ResponseEntity.ok(preDefesaDTO);
     }
+
+    @GetMapping("/{preDefesaId}/detalhes")
+    public ResponseEntity<PreDefesaResponseDTO> detalharPreDefesaPorIdEUsuario(
+            @PathVariable UUID preDefesaId,
+            @RequestParam UUID usuarioId) {
+        try {
+            // Chama o serviço para obter os detalhes da pré-defesa
+            PreDefesaResponseDTO detalhesPreDefesa = preDefesaService.detalharPreDefesaPorIdEUsuario(preDefesaId, usuarioId);
+
+            // Retorna a resposta com o DTO e o status HTTP 200 (OK)
+            return ResponseEntity.ok(detalhesPreDefesa);
+        } catch (RuntimeException e) {
+            // Retorna uma resposta de erro com o status HTTP 403 (FORBIDDEN) se o usuário não tiver permissão
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
+
 
     @GetMapping
 public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesas(@RequestParam(required = false) StatusDefesa status) {
@@ -79,6 +105,20 @@ public ResponseEntity<List<PreDefesaResponseDTO>> listarTodasPreDefesas() {
             @RequestParam UUID usuarioId,
             @RequestParam(required = false) String descricao) {
         return preDefesaService.atualizarStatusPreDefesa(preDefesaId, status, usuarioId, descricao);
+    }
+
+  @GetMapping("/monografias-em-pre-defesa")
+    public List<Monografia> listarMonografiasEmPreDefesa() {
+        return preDefesaService.listarMonografiasEmPreDefesa();
+    }
+
+    @GetMapping("/usuario/{usuarioId}/filtradas")
+    public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesasDoUsuarioFiltradas(@PathVariable UUID usuarioId) {
+        // Chama o serviço para listar as pré-defesas filtradas
+        List<PreDefesaResponseDTO> preDefesas = preDefesaService.listarPreDefesasDoUsuarioFiltradas(usuarioId);
+
+        // Retorna a resposta com a lista de DTOs e o status HTTP 200 (OK)
+        return ResponseEntity.ok(preDefesas);
     }
 
     @GetMapping("/{preDefesaId}/visualizar")

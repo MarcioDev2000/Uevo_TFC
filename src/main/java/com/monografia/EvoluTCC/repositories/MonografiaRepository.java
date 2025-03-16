@@ -50,4 +50,5 @@ public interface MonografiaRepository extends JpaRepository<Monografia, UUID> {
     long countByStatus(StatusMonografia status);
 
     long countByOrientadorId(UUID orientadorId);
+
 }
