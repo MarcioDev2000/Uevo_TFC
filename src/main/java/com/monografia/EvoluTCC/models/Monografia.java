@@ -3,6 +3,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.monografia.EvoluTCC.Enums.StatusMonografia;
+import com.monografia.EvoluTCC.Enums.TipoUsuario;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -86,6 +88,9 @@ public class Monografia {
 
      @Transient
      private String linkTermoDoAluno;
+
+     @Enumerated(EnumType.STRING)
+     private TipoUsuario aprovadoPor;
 
     // Construtor padrão
     public Monografia() {}
@@ -286,5 +291,14 @@ this.dataStatus = LocalDateTime.now();
     public void setLinkTermoDoAluno(String linkTermoDoAluno) {
         this.linkTermoDoAluno = linkTermoDoAluno;
     }
+
+    public TipoUsuario getAprovadoPor() {
+        return aprovadoPor;
+    }
+    
+    public void setAprovadoPor(TipoUsuario aprovadoPor) {
+        this.aprovadoPor = aprovadoPor;
+    }
+    
 
 }

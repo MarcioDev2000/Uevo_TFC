@@ -10,7 +10,7 @@ import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
 import com.monografia.EvoluTCC.dto.MonografiaResponseDTO;
 import com.monografia.EvoluTCC.repositories.MonografiaRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
-
+import com.monografia.EvoluTCC.Enums.TipoUsuario;
 import jakarta.transaction.Transactional;
 
 import com.monografia.EvoluTCC.repositories.CursoRepository;
@@ -197,7 +197,7 @@ return updatedMonografia;
         // Se a monografia estiver sendo aprovada, associamos um Admin se necessário
         if (novoStatus == StatusMonografia.APROVADO) {
             monografia.setStatus(StatusMonografia.APROVADO);
-    
+            monografia.setAprovadoPor(TipoUsuario.ORIENTADOR);
             if (monografia.getAdmin() == null) {
                 List<Usuario> admins = usuarioRepository.findByTipoUsuario_Nome("Admin");
                 Usuario admin = admins.stream().findFirst()
@@ -303,6 +303,7 @@ private void adicionarLinksDocumentos(Monografia monografia) {
 
         if (novoStatus == StatusMonografia.DISPONIVEL) {
             monografia.setStatus(StatusMonografia.DISPONIVEL);
+            monografia.setAprovadoPor(TipoUsuario.ADMIN); // Define que foi aprovado por um Admin
             monografia.setAdmin(admin);
         } else if (novoStatus == StatusMonografia.EM_REVISAO) {
             monografia.setStatus(StatusMonografia.EM_REVISAO);
@@ -707,6 +708,11 @@ public List<MonografiaResponseDTO> listarMonografiasAprovadasPorAdmin(UUID admin
 
     // Busca todas as monografias aprovadas
     List<Monografia> monografiasAprovadas = monografiaRepository.findByStatus(StatusMonografia.APROVADO);
+
+    // Filtra as monografias aprovadas por Orientador (ignora as aprovadas por Admin)
+    monografiasAprovadas = monografiasAprovadas.stream()
+        .filter(monografia -> monografia.getAprovadoPor() == TipoUsuario.ORIENTADOR) // Apenas monografias aprovadas por Orientador
+        .collect(Collectors.toList());
 
     // Adiciona links para os documentos de cada monografia
     monografiasAprovadas.forEach(this::adicionarLinksDocumentos);

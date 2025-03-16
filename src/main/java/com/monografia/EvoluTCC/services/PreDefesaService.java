@@ -317,6 +317,11 @@ public List<PreDefesaResponseDTO> listarPreDefesasDoUsuario(UUID usuarioId) {
         preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
     }
 
+    // Filtra as pré-defesas com status MARCADA
+    preDefesas = preDefesas.stream()
+            .filter(preDefesa -> preDefesa.getStatus() == StatusDefesa.MARCADA)
+            .collect(Collectors.toList());
+
     // Converte as pré-defesas para DTOs
     return preDefesas.stream()
             .map(this::toDTO)
@@ -324,7 +329,15 @@ public List<PreDefesaResponseDTO> listarPreDefesasDoUsuario(UUID usuarioId) {
 }
 
 public List<PreDefesaResponseDTO> listarTodasPreDefesas() {
+    // Busca todas as pré-defesas no banco de dados
     List<PreDefesa> preDefesas = preDefesaRepository.findAll();
+
+    // Filtra as pré-defesas com status MARCADA
+    preDefesas = preDefesas.stream()
+            .filter(preDefesa -> preDefesa.getStatus() == StatusDefesa.MARCADA)
+            .collect(Collectors.toList());
+
+    // Converte as pré-defesas filtradas para DTOs
     return preDefesas.stream()
             .map(this::toDTO)
             .collect(Collectors.toList());
