@@ -36,7 +36,8 @@ public class UsuarioController {
             Usuario usuarioCriado = usuarioService.criarUsuario(usuarioDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCriado);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // Retorna um objeto JSON com a mensagem de erro no campo "email"
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("email", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao criar usuário.");
         }
