@@ -377,7 +377,15 @@ public List<PreDefesaResponseDTO> listarPreDefesasComStatusPreMonografia(UUID us
 
     if (tipoUsuario.equals("Orientador")) {
         // Busca as pré-defesas onde o usuário é orientador da monografia
-        preDefesas = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+        List<PreDefesa> preDefesasOrientador = preDefesaRepository.findByMonografiaOrientadorId(usuarioId);
+
+        // Busca as pré-defesas onde o usuário é presidente ou vogal
+        List<PreDefesa> preDefesasPresidenteVogal = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
+
+        // Combina as duas listas e remove duplicatas (se houver)
+        preDefesas = Stream.concat(preDefesasOrientador.stream(), preDefesasPresidenteVogal.stream())
+                           .distinct()
+                           .collect(Collectors.toList());
     } else if (tipoUsuario.equals("Presidente") || tipoUsuario.equals("Vogal")) {
         // Busca as pré-defesas onde o usuário é presidente ou vogal
         preDefesas = preDefesaRepository.findByPresidenteIdOrVogalId(usuarioId, usuarioId);
@@ -393,20 +401,20 @@ public List<PreDefesaResponseDTO> listarPreDefesasComStatusPreMonografia(UUID us
 
     // Converte as pré-defesas para DTOs
     return preDefesas.stream()
-    .map(preDefesa -> {
-        PreDefesaResponseDTO dto = toDTO(preDefesa);
-        // Adiciona os links dos documentos da monografia ao DTO
-        Monografia monografia = preDefesa.getMonografia();
-        DocumentoUtils.adicionarLinksDocumentos(monografia); // Usando a classe utilitária
-        dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
-        dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
-        dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
-        dto.setLinkProjeto(monografia.getLinkProjeto());
-        dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
-        dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
-        return dto;
-    })
-    .collect(Collectors.toList());
+            .map(preDefesa -> {
+                PreDefesaResponseDTO dto = toDTO(preDefesa);
+                // Adiciona os links dos documentos da monografia ao DTO
+                Monografia monografia = preDefesa.getMonografia();
+                DocumentoUtils.adicionarLinksDocumentos(monografia); // Usando a classe utilitária
+                dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+                dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+                dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+                dto.setLinkProjeto(monografia.getLinkProjeto());
+                dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+                dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
+                return dto;
+            })
+            .collect(Collectors.toList());
 }
 
 @Transactional
