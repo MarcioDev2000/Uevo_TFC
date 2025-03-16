@@ -411,6 +411,8 @@ public List<MonografiaResponseDTO> getMonografiasPorOrientador(UUID orientadorId
         String alunoNomeCompleto = aluno.getNome() + " " + aluno.getSobrenome();
         dto.setAlunoNomeCompleto(alunoNomeCompleto);
 
+        dto.setCursoNome(monografia.getCurso().getNome());
+
         return dto;
     }
 
