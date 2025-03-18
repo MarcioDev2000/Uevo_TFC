@@ -95,24 +95,26 @@ public class Monografia {
     // Construtor padrão
     public Monografia() {}
 
-    public Monografia(Usuario aluno, Usuario admin, Usuario orientador, Especialidade especialidade, String tema,
-    byte[] extratoBancario, byte[] declaracaoNotas, byte[] termoOrientador, byte[] projeto,
-    byte[] documentoBi, byte[] termoDoAluno, StatusMonografia status, String descricaoMelhoria) {
-this.aluno = aluno;
-this.admin = admin;
-this.orientador = orientador;
-this.especialidade = especialidade;
-this.tema = tema;
-this.extratoBancario = extratoBancario;
-this.declaracaoNotas = declaracaoNotas;
-this.termoOrientador = termoOrientador;
-this.projeto = projeto;
-this.documentoBi = documentoBi;
-this.termoDoAluno = termoDoAluno;
-this.status = status;
-this.descricaoMelhoria = descricaoMelhoria;
-this.dataStatus = LocalDateTime.now();
-}
+    public Monografia(Usuario aluno, Usuario admin, Usuario orientador, Curso curso, Especialidade especialidade,
+                      String tema, byte[] extratoBancario, byte[] declaracaoNotas, byte[] termoOrientador,
+                      byte[] projeto, byte[] documentoBi, byte[] termoDoAluno, StatusMonografia status,
+                      String descricaoMelhoria) {
+        this();
+        this.aluno = aluno;
+        this.admin = admin;
+        this.orientador = orientador;
+        this.curso = curso;
+        this.especialidade = especialidade;
+        this.tema = tema;
+        this.extratoBancario = extratoBancario;
+        this.declaracaoNotas = declaracaoNotas;
+        this.termoOrientador = termoOrientador;
+        this.projeto = projeto;
+        this.documentoBi = documentoBi;
+        this.termoDoAluno = termoDoAluno;
+        this.status = status;
+        this.descricaoMelhoria = descricaoMelhoria;
+    }
 
 
     // Getters e Setters

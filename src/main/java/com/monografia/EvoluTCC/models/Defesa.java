@@ -1,5 +1,4 @@
 package com.monografia.EvoluTCC.models;
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,9 +17,6 @@ public class Defesa {
     @JoinColumn(name = "monografia_id", nullable = false)
     private Monografia monografia;
 
-    @Column(nullable = false)
-    private LocalDateTime dataDefesa;
-
     @ManyToOne
     @JoinColumn(name = "presidente_id", nullable = false)
     private Usuario presidente;
@@ -32,9 +28,19 @@ public class Defesa {
     private Float nota;
     private String observacoes;
 
+    @Column(nullable = false)
+    private LocalDateTime dataInicio;  // Novo atributo para a data de início
+
+    @Column(nullable = false)
+    private LocalDateTime dataFim; 
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusDefesa status;
+
+    @ManyToOne
+    @JoinColumn(name = "pre_defesa_id") // Nova relação com PreDefesa
+    private PreDefesa preDefesa;
 
     // Construtor padrão
     public Defesa() {}
@@ -56,13 +62,6 @@ public class Defesa {
         this.monografia = monografia;
     }
 
-    public LocalDateTime getDataDefesa() {
-        return dataDefesa;
-    }
-
-    public void setDataDefesa(LocalDateTime dataDefesa) {
-        this.dataDefesa = dataDefesa;
-    }
 
     public Usuario getPresidente() {
         return presidente;
@@ -102,5 +101,29 @@ public class Defesa {
 
     public void setStatus(StatusDefesa status) {
         this.status = status;
+    }
+
+    public LocalDateTime getDataInicio() {
+        return dataInicio;
+    }
+
+    public void setDataInicio(LocalDateTime dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public LocalDateTime getDataFim() {
+        return dataFim;
+    }
+
+    public void setDataFim(LocalDateTime dataFim) {
+        this.dataFim = dataFim;
+    }
+
+    public PreDefesa getPreDefesa() {
+        return preDefesa;
+    }
+
+    public void setPreDefesa(PreDefesa preDefesa) {
+        this.preDefesa = preDefesa;
     }
 }
