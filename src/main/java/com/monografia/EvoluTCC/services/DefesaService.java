@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class DefesaService {
@@ -164,5 +165,48 @@ public class DefesaService {
 
         return dto;
     }
+
+    public List<DefesaDTO> listarDefesasMarcadas() {
+        return defesaRepository.findByStatus(StatusDefesa.MARCADA).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<DefesaDTO> listarDefesasMarcadasStatus(UUID usuarioId) {
+        // Busca o usuário pelo ID
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+    
+        List<Defesa> defesas;
+    
+        // Obtém o tipo de usuário
+        String tipoUsuario = usuario.getTipoUsuario().getNome(); // Supondo que getNome() retorna "Aluno", "Orientador", etc.
+    
+        if (tipoUsuario.equals("Aluno")) {
+            // Busca as defesas onde o aluno é o autor da monografia
+            defesas = defesaRepository.findByMonografiaAlunoIdAndStatus(usuarioId, StatusDefesa.MARCADA);
+        } else if (tipoUsuario.equals("Orientador")) {
+            // Busca as defesas onde o usuário é orientador da monografia
+            List<Defesa> defesasOrientador = defesaRepository.findByMonografiaOrientadorIdAndStatus(usuarioId, StatusDefesa.MARCADA);
+    
+            // Busca as defesas onde o usuário é presidente ou vogal
+            List<Defesa> defesasPresidenteVogal = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.MARCADA);
+    
+            // Combina as listas e remove duplicatas
+            defesas = Stream.concat(defesasOrientador.stream(), defesasPresidenteVogal.stream())
+                            .distinct()
+                            .collect(Collectors.toList());
+        } else {
+            // Caso o usuário seja presidente ou vogal, busca as defesas correspondentes
+            defesas = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.MARCADA);
+        }
+    
+        // Converte a lista de Defesa para DefesaDTO
+        return defesas.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    
 
 }

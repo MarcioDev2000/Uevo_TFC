@@ -22,4 +22,7 @@ public interface DefesaRepository extends JpaRepository<Defesa, UUID> {
         LocalDateTime dataFim, 
         UUID especialidadeId
     );
+
+    List<Defesa> findByStatus(StatusDefesa status);
+
 }

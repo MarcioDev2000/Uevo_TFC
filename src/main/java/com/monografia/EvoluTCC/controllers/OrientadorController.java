@@ -1,6 +1,7 @@
 package com.monografia.EvoluTCC.controllers;
 import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
 import com.monografia.EvoluTCC.dto.CursoDTO;
+import com.monografia.EvoluTCC.dto.OrientadorResponseDTO;
 import com.monografia.EvoluTCC.models.Curso;
 import com.monografia.EvoluTCC.models.Especialidade;
 import com.monografia.EvoluTCC.repositories.CursoRepository;
@@ -8,6 +9,7 @@ import com.monografia.EvoluTCC.repositories.EspecialidadeRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 import com.monografia.EvoluTCC.services.MonografiaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -71,6 +73,13 @@ public ResponseEntity<List<CursoDTO>> getCursos() {
 @GetMapping("/{orientadorId}/alunos")
 public List<AlunoResponseDTO> getAlunosPorOrientador(@PathVariable UUID orientadorId) {
     return monografiaService.getAlunosPorOrientador(orientadorId);
+}
+
+@GetMapping("/{orientadorId}")
+public ResponseEntity<OrientadorResponseDTO> getOrientadorPorId(@PathVariable UUID orientadorId) {
+    return usuarioRepository.findById(orientadorId)
+            .map(usuario -> ResponseEntity.ok(new OrientadorResponseDTO(usuario)))
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
 }
 
     
