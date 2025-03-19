@@ -143,6 +143,48 @@ public List<Monografia> listarMonografiasEmPreDefesa() {
     return monografiaRepository.findByStatus(StatusMonografia.EM_PRE_DEFESA);
 }
 
+
+public List<PreDefesaResponseDTO> listarMonografiasEmPreDefesaStatus(UUID usuarioId) {
+    // Busca o usuário pelo ID
+    Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+
+    // Verifica se o usuário é do tipo Admin
+    if (usuario.getTipoUsuario().getNome().equals("Admin")) {
+        // Busca as pré-defesas com status APROVADA
+        List<PreDefesa> preDefesas = preDefesaRepository.findByStatus(StatusDefesa.APROVADO);
+        
+        // Filtra as pré-defesas cujas monografias estão com status EM_DEFESA
+        List<PreDefesa> preDefesasFiltradas = preDefesas.stream()
+                .filter(preDefesa -> preDefesa.getMonografia().getStatus() == StatusMonografia.EM_DEFESA)
+                .collect(Collectors.toList());
+
+        // Converte as pré-defesas filtradas para PreDefesaResponseDTO
+        List<PreDefesaResponseDTO> dtos = preDefesasFiltradas.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        // Adiciona links dos documentos para cada monografia no DTO
+        for (PreDefesaResponseDTO dto : dtos) {
+            Monografia monografia = monografiaRepository.findById(dto.getMonografiaId())
+                    .orElseThrow(() -> new RuntimeException("Monografia não encontrada com o ID: " + dto.getMonografiaId()));
+            DocumentoUtils.adicionarLinksDocumentos(monografia);
+            dto.setLinkExtratoBancario(monografia.getLinkExtratoBancario());
+            dto.setLinkDeclaracaoNotas(monografia.getLinkDeclaracaoNotas());
+            dto.setLinkTermoOrientador(monografia.getLinkTermoOrientador());
+            dto.setLinkProjeto(monografia.getLinkProjeto());
+            dto.setLinkDocumentoBi(monografia.getLinkDocumentoBi());
+            dto.setLinkTermoDoAluno(monografia.getLinkTermoDoAluno());
+        }
+
+        return dtos;
+    } else {
+        // Se não for Admin, lança uma exceção
+        throw new RuntimeException("Apenas usuários do tipo Admin podem acessar este método.");
+    }
+}
+
+
 private PreDefesaResponseDTO toDTO(PreDefesa preDefesa) {
     PreDefesaResponseDTO dto = new PreDefesaResponseDTO();
     dto.setId(preDefesa.getId());

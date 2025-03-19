@@ -112,6 +112,17 @@ public ResponseEntity<List<PreDefesaResponseDTO>> listarTodasPreDefesas() {
         return preDefesaService.listarMonografiasEmPreDefesa();
     }
 
+    @GetMapping("/monografias-em-pre-defesa/{usuarioId}")
+    public ResponseEntity<List<PreDefesaResponseDTO>> listarMonografiasEmPreDefesaStatus(@PathVariable UUID usuarioId) {
+        try {
+            List<PreDefesaResponseDTO> preDefesas = preDefesaService.listarMonografiasEmPreDefesaStatus(usuarioId);
+            return ResponseEntity.ok(preDefesas);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
+      
+
     @GetMapping("/usuario/{usuarioId}/filtradas")
     public ResponseEntity<List<PreDefesaResponseDTO>> listarPreDefesasDoUsuarioFiltradas(@PathVariable UUID usuarioId) {
         // Chama o serviço para listar as pré-defesas filtradas
