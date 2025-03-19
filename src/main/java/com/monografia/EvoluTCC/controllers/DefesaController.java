@@ -55,15 +55,16 @@ public class DefesaController {
     }
 
     @PutMapping("/aplicarNota/{defesaId}")
-    public ResponseEntity<Defesa> aplicarNotaObservacao(@PathVariable UUID defesaId,
-                                                        @RequestParam Float nota,
-                                                        @RequestParam String observacoes) {
-        if (nota < 10 || nota > 20) {
-            throw new RuntimeException("A nota deve estar entre 10 e 20.");
-        }
-        Defesa defesa = defesaService.aplicarNotaObservacao(defesaId, nota, observacoes);
-        return ResponseEntity.ok(defesa);
+public ResponseEntity<Defesa> aplicarNotaObservacao(@PathVariable UUID defesaId,
+                                                    @RequestParam Float nota,
+                                                    @RequestParam String observacoes,
+                                                    @RequestParam UUID usuarioId) {
+    if (nota < 10 || nota > 20) {
+        throw new RuntimeException("A nota deve estar entre 10 e 20.");
     }
+    Defesa defesa = defesaService.aplicarNotaObservacao(defesaId, nota, observacoes, usuarioId);
+    return ResponseEntity.ok(defesa);
+}
 
     @GetMapping("/marcadas")
 public ResponseEntity<List<DefesaDTO>> listarDefesasMarcadas() {

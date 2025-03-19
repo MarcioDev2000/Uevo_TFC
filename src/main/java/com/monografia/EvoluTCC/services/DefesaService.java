@@ -112,29 +112,34 @@ public class DefesaService {
     }
 
     @Transactional
-    public Defesa aplicarNotaObservacao(UUID defesaId, Float nota, String observacoes) {
-        Defesa defesa = defesaRepository.findById(defesaId)
-                .orElseThrow(() -> new RuntimeException("Defesa não encontrada com o ID: " + defesaId));
-    
-        // Define a nota e as observações
-        defesa.setNota(nota);
-        defesa.setObservacoes(observacoes);
-    
-        // Atualiza o status da defesa e da monografia
-        if (nota >= 10.0) { // Defesa aprovada
-            defesa.setStatus(StatusDefesa.APROVADO);
-            defesa.getMonografia().setStatus(StatusMonografia.APROVADO);
-        } else { // Defesa em revisão
-            defesa.setStatus(StatusDefesa.EM_REVISAO);
-            defesa.getMonografia().setStatus(StatusMonografia.EM_REVISAO);
-        }
-    
-        // Salva as alterações
-        defesaRepository.save(defesa);
-        monografiaRepository.save(defesa.getMonografia());
-    
-        return defesa;
+public Defesa aplicarNotaObservacao(UUID defesaId, Float nota, String observacoes, UUID usuarioId) {
+    Defesa defesa = defesaRepository.findById(defesaId)
+            .orElseThrow(() -> new RuntimeException("Defesa não encontrada com o ID: " + defesaId));
+
+    // Verifica se o usuário é o presidente ou o vogal associado à defesa
+    if (!defesa.getPresidente().getId().equals(usuarioId) && !defesa.getVogal().getId().equals(usuarioId)) {
+        throw new RuntimeException("Apenas o presidente ou o vogal podem aplicar notas e observações.");
     }
+
+    // Define a nota e as observações
+    defesa.setNota(nota);
+    defesa.setObservacoes(observacoes);
+
+    // Atualiza o status da defesa e da monografia
+    if (nota >= 10.0) { // Defesa aprovada
+        defesa.setStatus(StatusDefesa.APROVADO);
+        defesa.getMonografia().setStatus(StatusMonografia.APROVADO);
+    } else { // Defesa em revisão
+        defesa.setStatus(StatusDefesa.EM_REVISAO);
+        defesa.getMonografia().setStatus(StatusMonografia.EM_REVISAO);
+    }
+
+    // Salva as alterações
+    defesaRepository.save(defesa);
+    monografiaRepository.save(defesa.getMonografia());
+
+    return defesa;
+}
 
  private DefesaDTO toDTO(Defesa defesa) {
         DefesaDTO dto = new DefesaDTO();
@@ -203,10 +208,17 @@ public class DefesaService {
     
         // Converte a lista de Defesa para DefesaDTO
         return defesas.stream()
-                .map(this::toDTO)
+                .map(defesa -> {
+                    DefesaDTO dto = toDTO(defesa);
+                    // Adiciona os novos campos
+                    dto.setStatusMonografia(defesa.getMonografia().getStatus()); // Status da monografia
+                    dto.setTemaMonografia(defesa.getMonografia().getTema()); // Tema da monografia
+                    dto.setOrientadorNomeCompleto(defesa.getMonografia().getOrientador().getNome() + " " + defesa.getMonografia().getOrientador().getSobrenome()); // Nome do orientador
+                    dto.setAlunoNomeCompleto(defesa.getMonografia().getAluno().getNome() + " " + defesa.getMonografia().getAluno().getSobrenome()); // Nome do aluno
+                    dto.setEspecialidadeNome(defesa.getMonografia().getEspecialidade().getNome()); // Especialidade da monografia
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
-    
-    
 
 }

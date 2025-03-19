@@ -523,7 +523,8 @@ public Map<String, Integer> getEstatisticasStatusPorAlunoId(UUID alunoId) {
     estatisticas.put("Pendente", 0);
     estatisticas.put("Aprovado", 0);
     estatisticas.put("Em_Revisao", 0);
-    estatisticas.put("Em_Pre_Defesa", 0); // Adiciona o status EM_PRE_DEFESA
+    estatisticas.put("Em_Pre_Defesa", 0);
+    estatisticas.put("Em_Defesa", 0); // Adiciona o status EM_DEFESA
 
     // Busca a monografia do aluno
     Monografia monografia = monografiaRepository.findByAlunoId(alunoId)
@@ -543,7 +544,10 @@ public Map<String, Integer> getEstatisticasStatusPorAlunoId(UUID alunoId) {
             estatisticas.put("Em_Revisao", 1);
             break;
         case EM_PRE_DEFESA:
-            estatisticas.put("Em_Pre_Defesa", 1); // Adiciona o status EM_PRE_DEFESA
+            estatisticas.put("Em_Pre_Defesa", 1);
+            break;
+        case EM_DEFESA:
+            estatisticas.put("Em_Defesa", 1); // Adiciona o status EM_DEFESA
             break;
         default:
             throw new RuntimeException("Status da monografia inválido: " + monografia.getStatus());
@@ -551,6 +555,7 @@ public Map<String, Integer> getEstatisticasStatusPorAlunoId(UUID alunoId) {
 
     return estatisticas;
 }
+
 
 public Monografia entregarProjetoParaPreDefesa(UUID monografiaId, MultipartFile projeto) throws IOException {
     Monografia monografia = getMonografiaById(monografiaId);
