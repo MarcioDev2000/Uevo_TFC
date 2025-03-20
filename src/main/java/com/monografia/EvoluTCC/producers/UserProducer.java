@@ -20,6 +20,7 @@ public class UserProducer {
     public void sendEmail(Usuario usuario) {
         EmailDto emailDto = new EmailDto();
         emailDto.setUserId(usuario.getId());
+        emailDto.setEmailFrom("pesselaabreu79@gmail.com"); // Defina o email de origem
         emailDto.setEmailTo(usuario.getEmail());
         emailDto.setSubject("🎉 Bem-vindo à Utanga, " + usuario.getNome() + "! 🎓");
         emailDto.setText("Olá " + usuario.getNome() + ",\n\n" +
@@ -33,6 +34,7 @@ public class UserProducer {
     
         rabbitTemplate.convertAndSend(queue, emailDto);
     }
+    
 
     public void notifyOrientador(Monografia monografia) {
         EmailDto emailDto = new EmailDto();

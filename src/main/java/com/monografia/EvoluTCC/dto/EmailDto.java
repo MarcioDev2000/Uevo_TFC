@@ -1,9 +1,11 @@
 package com.monografia.EvoluTCC.dto;
+
 import java.util.UUID;
 
 public class EmailDto {
 
     private UUID userId;
+    private String emailFrom; // Novo campo
     private String emailTo;
     private String subject;
     private String text;
@@ -15,6 +17,14 @@ public class EmailDto {
 
     public void setUserId(UUID userId) {
         this.userId = userId;
+    }
+
+    public String getEmailFrom() { // Novo método
+        return emailFrom;
+    }
+
+    public void setEmailFrom(String emailFrom) { // Novo método
+        this.emailFrom = emailFrom;
     }
 
     public String getEmailTo() {
