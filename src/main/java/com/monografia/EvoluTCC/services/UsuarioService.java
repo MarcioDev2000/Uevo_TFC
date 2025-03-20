@@ -115,7 +115,7 @@ public class UsuarioService {
             // Salva o usuário no banco de dados
             Usuario salvarUsuario = usuarioRepository.save(usuario);
             // Envia email de confirmação
-            userProducer.sendEmail(salvarUsuario);
+            userProducer.sendEmailUser(salvarUsuario);
             return salvarUsuario;
         } catch (DataIntegrityViolationException e) {
             throw new IllegalArgumentException("O NIF já está cadastrado no sistema.");

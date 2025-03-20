@@ -7,6 +7,7 @@ import com.monografia.EvoluTCC.models.Defesa;
 import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.models.PreDefesa;
 import com.monografia.EvoluTCC.models.Usuario;
+import com.monografia.EvoluTCC.producers.UserProducer;
 import com.monografia.EvoluTCC.repositories.DefesaRepository;
 import com.monografia.EvoluTCC.repositories.PreDefesaRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
@@ -25,6 +26,9 @@ public class DefesaService {
 
         @Autowired
     private DefesaRepository defesaRepository;
+
+     @Autowired
+    private UserProducer userProducer;
 
     @Autowired
     private MonografiaRepository monografiaRepository;
@@ -87,10 +91,12 @@ public class DefesaService {
     
         // Atualiza o status da monografia para EM_DEFESA
         monografia.setStatus(StatusMonografia.EM_DEFESA);
-        monografiaRepository.save(monografia);
-    
-        // Salva a defesa no banco de dados
-        return defesaRepository.save(defesa);
+        Defesa savedDefesa = defesaRepository.save(defesa);
+
+    // Notifica os envolvidos sobre a defesa marcada
+        userProducer.notifyDefesaMarcada(savedDefesa);
+
+        return savedDefesa;
     }
 
     public List<DefesaDTO> listarDefesasPorAluno(UUID alunoId) {
@@ -129,9 +135,11 @@ public Defesa aplicarNotaObservacao(UUID defesaId, Float nota, String observacoe
     if (nota >= 10.0) { // Defesa aprovada
         defesa.setStatus(StatusDefesa.APROVADO);
         defesa.getMonografia().setStatus(StatusMonografia.APROVADO);
+        userProducer.notifyDefesaAprovada(defesa);
     } else { // Defesa em revisão
         defesa.setStatus(StatusDefesa.EM_REVISAO);
         defesa.getMonografia().setStatus(StatusMonografia.EM_REVISAO);
+        userProducer.notifyDefesaReprovada(defesa, observacoes);
     }
 
     // Salva as alterações

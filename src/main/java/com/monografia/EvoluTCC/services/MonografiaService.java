@@ -123,7 +123,7 @@ public class MonografiaService {
     Monografia savedMonografia = monografiaRepository.save(monografia);
 
     // Notifica o orientador
-    userProducer.notifyOrientador(savedMonografia);
+    userProducer.notifyMonografiaCriada(savedMonografia);
 
     return savedMonografia;
 }
@@ -172,7 +172,7 @@ monografia.setStatus(StatusMonografia.PENDENTE);
 Monografia updatedMonografia = monografiaRepository.save(monografia);
 
 // Notifica o orientador sobre a atualização
-userProducer.notifyOrientador(updatedMonografia);
+userProducer.notifyMonografiaAtualizada(updatedMonografia);
 
 return updatedMonografia;
 }
@@ -208,13 +208,12 @@ return updatedMonografia;
                         .orElseThrow(() -> new RuntimeException("Nenhum admin encontrado no sistema."));
                 monografia.setAdmin(admin);
             }
-    
-            monografiaRepository.save(monografia);
-            userProducer.notifyAdmin(monografia);
+     monografiaRepository.save(monografia);
+            userProducer.notifyMonografiaAprovada(monografia);
         } else if (novoStatus == StatusMonografia.EM_REVISAO) {
             monografia.setStatus(StatusMonografia.EM_REVISAO);
             monografia.setDescricaoMelhoria(descricao);
-            userProducer.notifyAluno(monografia);
+            userProducer.notifyMonografiaReprovada(monografia, descricao);
         }
     
         return monografiaRepository.save(monografia);
@@ -326,6 +325,7 @@ private void adicionarLinksDocumentos(Monografia monografia) {
     }
 
     // Métodos auxiliares
+    @SuppressWarnings("null")
     private void validarDocumento(MultipartFile documento) {
         if (documento != null && !documento.isEmpty()) {
             if (!documento.getContentType().equals("application/pdf")) {
@@ -722,7 +722,7 @@ public List<MonografiaResponseDTO> listarMonografiasAprovadasPorAdmin(UUID admin
     // Filtra as monografias aprovadas por Orientador (ignora as aprovadas por Admin)
     monografiasAprovadas = monografiasAprovadas.stream()
         .filter(monografia -> monografia.getAprovadoPor() == TipoUsuario.ORIENTADOR) // Apenas monografias aprovadas por Orientador
-        .filter(monografia -> !preDefesaRepository.existsByMonografiaId(monografia.getId())) // Exclui se já tem pré-defesa
+        .filter(monografia -> !preDefesaRepository.existsByMonografiaId(monografia.getId())) 
         .collect(Collectors.toList());
 
     // Adiciona links para os documentos de cada monografia
@@ -755,9 +755,7 @@ public MonografiaResponseDTO getMonografiaAprovadaPorAdmin(UUID adminId, UUID mo
         throw new RuntimeException("A monografia com ID " + monografiaId + " não está aprovada.");
     }
 
-    // Adiciona links para os documentos da monografia
     adicionarLinksDocumentos(monografia);
-
     // Converte a entidade Monografia para o DTO
     return mapToMonografiaResponseDTO(monografia);
 }

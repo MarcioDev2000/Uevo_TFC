@@ -16,6 +16,7 @@ import com.monografia.EvoluTCC.dto.PreDefesaResponseDTO;
 import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.models.PreDefesa;
 import com.monografia.EvoluTCC.models.Usuario;
+import com.monografia.EvoluTCC.producers.UserProducer;
 import com.monografia.EvoluTCC.repositories.DefesaRepository;
 import com.monografia.EvoluTCC.repositories.MonografiaRepository;
 import com.monografia.EvoluTCC.repositories.PreDefesaRepository;
@@ -33,6 +34,9 @@ public class PreDefesaService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+     @Autowired
+    private UserProducer userProducer;
 
     
     @Autowired
@@ -110,6 +114,9 @@ public PreDefesaDTO criarPreDefesa(UUID monografiaId, UUID presidenteId, UUID vo
 
     // Salva a pré-defesa no banco de dados
     PreDefesa savedPreDefesa = preDefesaRepository.save(preDefesa);
+
+    // Notifica os envolvidos sobre a pré-defesa marcada
+    userProducer.notifyPreDefesaMarcada(savedPreDefesa);
 
     // Cria o DTO para retornar a resposta
     PreDefesaDTO preDefesaDTO = new PreDefesaDTO();
@@ -281,9 +288,11 @@ public PreDefesaResponseDTO atualizarStatusPreDefesa(UUID preDefesaId, StatusDef
     // Atualiza o status da monografia com base no resultado da pré-defesa
     Monografia monografia = preDefesa.getMonografia();
     if (status == StatusDefesa.APROVADO) {
-        monografia.setStatus(StatusMonografia.APROVADO); // Aprovado para seguir para a defesa final
+        monografia.setStatus(StatusMonografia.APROVADO); 
+        userProducer.notifyPreDefesaAprovada(savedPreDefesa);// Aprovado para seguir para a defesa final
     } else if (status == StatusDefesa.EM_REVISAO) {
         monografia.setStatus(StatusMonografia.EM_REVISAO); // Precisa de revisão
+        userProducer.notifyPreDefesaReprovada(savedPreDefesa, descricao);
     }
     monografiaRepository.save(monografia);
 
