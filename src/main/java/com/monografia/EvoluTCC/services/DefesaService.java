@@ -185,9 +185,12 @@ public Defesa aplicarNotaObservacao(UUID defesaId, Float nota, String observacoe
         List<Defesa> defesas;
     
         // Obtém o tipo de usuário
-        String tipoUsuario = usuario.getTipoUsuario().getNome(); // Supondo que getNome() retorna "Aluno", "Orientador", etc.
+        String tipoUsuario = usuario.getTipoUsuario().getNome(); // Supondo que getNome() retorna "Aluno", "Orientador", "Admin", etc.
     
-        if (tipoUsuario.equals("Aluno")) {
+        if (tipoUsuario.equals("Admin")) {
+            // Se for Admin, busca todas as defesas com status MARCADA
+            defesas = defesaRepository.findByStatus(StatusDefesa.MARCADA);
+        } else if (tipoUsuario.equals("Aluno")) {
             // Busca as defesas onde o aluno é o autor da monografia
             defesas = defesaRepository.findByMonografiaAlunoIdAndStatus(usuarioId, StatusDefesa.MARCADA);
         } else if (tipoUsuario.equals("Orientador")) {
@@ -205,10 +208,10 @@ public Defesa aplicarNotaObservacao(UUID defesaId, Float nota, String observacoe
             // Caso o usuário seja presidente ou vogal, busca as defesas correspondentes
             defesas = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.MARCADA);
         }
-
+    
         defesas = defesas.stream()
-        .filter(defesa -> defesa.getNota() == null) // Exclui defesas com nota
-        .collect(Collectors.toList());
+                .filter(defesa -> defesa.getNota() == null) // Exclui defesas com nota
+                .collect(Collectors.toList());
     
         // Converte a lista de Defesa para DefesaDTO
         return defesas.stream()
@@ -224,54 +227,92 @@ public Defesa aplicarNotaObservacao(UUID defesaId, Float nota, String observacoe
                 })
                 .collect(Collectors.toList());
     }
+    
 
     public List<DefesaDTO> listarDefesasMarcadasStatusAprovado(UUID usuarioId) {
-    // Busca o usuário pelo ID
-    Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
-
-    List<Defesa> defesas;
-
-    // Obtém o tipo de usuário
-    String tipoUsuario = usuario.getTipoUsuario().getNome(); // Supondo que getNome() retorna "Aluno", "Orientador", etc.
-
-    if (tipoUsuario.equals("Aluno")) {
-        // Busca as defesas onde o aluno é o autor da monografia
-        defesas = defesaRepository.findByMonografiaAlunoIdAndStatus(usuarioId, StatusDefesa.MARCADA);
-    } else if (tipoUsuario.equals("Orientador")) {
-        // Busca as defesas onde o usuário é orientador da monografia
-        List<Defesa> defesasOrientador = defesaRepository.findByMonografiaOrientadorIdAndStatus(usuarioId, StatusDefesa.MARCADA);
-
-        // Busca as defesas onde o usuário é presidente ou vogal
-        List<Defesa> defesasPresidenteVogal = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.MARCADA);
-
-        // Combina as listas e remove duplicatas
-        defesas = Stream.concat(defesasOrientador.stream(), defesasPresidenteVogal.stream())
-                        .distinct()
-                        .collect(Collectors.toList());
-    } else {
-        // Caso o usuário seja presidente ou vogal, busca as defesas correspondentes
-        defesas = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.MARCADA);
+        // Busca o usuário pelo ID
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+    
+        // Obtém o tipo de usuário
+        String tipoUsuario = usuario.getTipoUsuario().getNome(); // Supondo que getNome() retorna "Aluno", "Orientador", etc.
+    
+        // Lista para armazenar as defesas
+        List<Defesa> defesas;
+    
+        // Verifica se o usuário é do tipo Admin
+        if (tipoUsuario.equals("Admin")) {
+            // Se for Admin, busca todas as defesas com status APROVADO e nota não nula
+            defesas = defesaRepository.findByStatusAndNotaNotNull(StatusDefesa.APROVADO);
+        } else if (tipoUsuario.equals("Aluno")) {
+            // Busca as defesas onde o aluno é o autor da monografia
+            defesas = defesaRepository.findByMonografiaAlunoIdAndStatus(usuarioId, StatusDefesa.APROVADO);
+        } else if (tipoUsuario.equals("Orientador")) {
+            // Busca as defesas onde o usuário é orientador da monografia
+            List<Defesa> defesasOrientador = defesaRepository.findByMonografiaOrientadorIdAndStatus(usuarioId, StatusDefesa.APROVADO);
+            // Busca as defesas onde o usuário é presidente ou vogal
+            List<Defesa> defesasPresidenteVogal = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.APROVADO);
+            // Combina as listas e remove duplicatas
+            defesas = Stream.concat(defesasOrientador.stream(), defesasPresidenteVogal.stream())
+                            .distinct()
+                            .collect(Collectors.toList());
+        } else {
+            // Caso o usuário seja presidente ou vogal, busca as defesas correspondentes
+            defesas = defesaRepository.findByPresidenteIdOrVogalIdAndStatus(usuarioId, usuarioId, StatusDefesa.APROVADO);
+        }
+    
+        // Filtra as defesas com status APROVADO e nota não nula
+        return defesas.stream()
+                .filter(defesa -> defesa.getNota() != null) // Filtra por nota não nula
+                .map(defesa -> {
+                    DefesaDTO dto = toDTO(defesa);
+                    // Adiciona os novos campos
+                    dto.setStatusMonografia(defesa.getMonografia().getStatus()); // Status da monografia
+                    dto.setTemaMonografia(defesa.getMonografia().getTema()); // Tema da monografia
+                    dto.setOrientadorNomeCompleto(defesa.getMonografia().getOrientador().getNome() + " " + defesa.getMonografia().getOrientador().getSobrenome()); // Nome do orientador
+                    dto.setAlunoNomeCompleto(defesa.getMonografia().getAluno().getNome() + " " + defesa.getMonografia().getAluno().getSobrenome()); // Nome do aluno
+                    dto.setEspecialidadeNome(defesa.getMonografia().getEspecialidade().getNome()); // Especialidade da monografia
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
+    
 
-    // Filtra as defesas com status APROVADO, statusMonografia APROVADO e nota não nula
-    List<DefesaDTO> defesasFiltradas = defesas.stream()
-            .filter(defesa -> defesa.getStatus() == StatusDefesa.APROVADO) // Filtra por status APROVADO
-            .filter(defesa -> defesa.getMonografia().getStatus() == StatusMonografia.APROVADO) // Filtra por statusMonografia APROVADO
-            .filter(defesa -> defesa.getNota() != null) // Filtra por nota não nula
-            .map(defesa -> {
-                DefesaDTO dto = toDTO(defesa);
-                // Adiciona os novos campos
-                dto.setStatusMonografia(defesa.getMonografia().getStatus()); // Status da monografia
-                dto.setTemaMonografia(defesa.getMonografia().getTema()); // Tema da monografia
-                dto.setOrientadorNomeCompleto(defesa.getMonografia().getOrientador().getNome() + " " + defesa.getMonografia().getOrientador().getSobrenome()); // Nome do orientador
-                dto.setAlunoNomeCompleto(defesa.getMonografia().getAluno().getNome() + " " + defesa.getMonografia().getAluno().getSobrenome()); // Nome do aluno
-                dto.setEspecialidadeNome(defesa.getMonografia().getEspecialidade().getNome()); // Especialidade da monografia
-                return dto;
-            })
-            .collect(Collectors.toList());
+    // alunos 
 
-    return defesasFiltradas;
-}
+    public List<DefesaDTO> listarDefesasMarcadasStatusALunos(UUID usuarioId) {
+        // Busca o usuário pelo ID
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + usuarioId));
+    
+        // Verifica se o usuário é do tipo Aluno
+        if (!usuario.getTipoUsuario().getNome().equals("Aluno")) {
+            throw new RuntimeException("Apenas usuários do tipo Aluno podem visualizar as defesas.");
+        }
+    
+        // Busca as defesas onde o aluno é o autor da monografia
+        List<Defesa> defesas = defesaRepository.findByMonografiaAlunoIdAndStatus(usuarioId, StatusDefesa.MARCADA);
+    
+        // Filtra as defesas para excluir aquelas que já têm nota
+        defesas = defesas.stream()
+                .filter(defesa -> defesa.getNota() == null) // Exclui defesas com nota
+                .collect(Collectors.toList());
+    
+        // Converte a lista de Defesa para DefesaDTO
+        return defesas.stream()
+                .map(defesa -> {
+                    DefesaDTO dto = toDTO(defesa);
+                    // Adiciona os novos campos
+                    dto.setStatusMonografia(defesa.getMonografia().getStatus()); // Status da monografia
+                    dto.setTemaMonografia(defesa.getMonografia().getTema()); // Tema da monografia
+                    dto.setOrientadorNomeCompleto(defesa.getMonografia().getOrientador().getNome() + " " + defesa.getMonografia().getOrientador().getSobrenome()); // Nome do orientador
+                    dto.setAlunoNomeCompleto(defesa.getMonografia().getAluno().getNome() + " " + defesa.getMonografia().getAluno().getSobrenome()); // Nome do aluno
+                    dto.setEspecialidadeNome(defesa.getMonografia().getEspecialidade().getNome()); // Especialidade da monografia
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+    
+    
 
 }

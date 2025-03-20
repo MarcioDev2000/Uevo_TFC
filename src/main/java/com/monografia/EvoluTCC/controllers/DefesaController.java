@@ -88,4 +88,10 @@ public ResponseEntity<List<DefesaDTO>> listarDefesasMarcadasStatusAprovado(@Path
     return defesas.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(defesas);
 }
 
+@GetMapping("/marcadas/status/aluno/{usuarioId}")
+public ResponseEntity<List<DefesaDTO>> listarDefesasMarcadasStatusAlunos(@PathVariable UUID usuarioId) {
+    List<DefesaDTO> defesas = defesaService.listarDefesasMarcadasStatusALunos(usuarioId);
+    return defesas.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(defesas);
+}
+
 }

@@ -16,6 +16,7 @@ import com.monografia.EvoluTCC.dto.PreDefesaResponseDTO;
 import com.monografia.EvoluTCC.models.Monografia;
 import com.monografia.EvoluTCC.models.PreDefesa;
 import com.monografia.EvoluTCC.models.Usuario;
+import com.monografia.EvoluTCC.repositories.DefesaRepository;
 import com.monografia.EvoluTCC.repositories.MonografiaRepository;
 import com.monografia.EvoluTCC.repositories.PreDefesaRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
@@ -32,6 +33,10 @@ public class PreDefesaService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    
+    @Autowired
+    private DefesaRepository defesaRepository;
 
     @Transactional
 public PreDefesaDTO criarPreDefesa(UUID monografiaId, UUID presidenteId, UUID vogalId, LocalDateTime dataInicio, LocalDateTime dataFim) {
@@ -153,7 +158,8 @@ public List<PreDefesaResponseDTO> listarMonografiasEmPreDefesaStatus(UUID usuari
         
         List<PreDefesaResponseDTO> dtos = preDefesas.stream()
                 .map(this::toDTO)
-                .filter(dto -> dto.getStatusMonografia() != StatusMonografia.EM_DEFESA) // Ajuste aqui
+                .filter(dto -> dto.getStatusMonografia() != StatusMonografia.EM_DEFESA) // Exclui EM_DEFESA
+                .filter(dto -> !defesaRepository.existsByPreDefesaId(dto.getId())) // Exclui se já tem defesa
                 .collect(Collectors.toList());
 
         for (PreDefesaResponseDTO dto : dtos) {
@@ -173,6 +179,7 @@ public List<PreDefesaResponseDTO> listarMonografiasEmPreDefesaStatus(UUID usuari
         throw new RuntimeException("Apenas usuários do tipo Admin podem acessar este método.");
     }
 }
+
 
 
 

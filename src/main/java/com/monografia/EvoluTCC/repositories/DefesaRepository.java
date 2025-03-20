@@ -24,5 +24,7 @@ public interface DefesaRepository extends JpaRepository<Defesa, UUID> {
     );
 
     List<Defesa> findByStatus(StatusDefesa status);
+    List<Defesa> findByStatusAndNotaNotNull(StatusDefesa status);
+    boolean existsByPreDefesaId(UUID preDefesaId);
 
 }

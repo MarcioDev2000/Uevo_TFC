@@ -9,6 +9,7 @@ import com.monografia.EvoluTCC.Enums.StatusMonografia;
 import com.monografia.EvoluTCC.dto.AlunoResponseDTO;
 import com.monografia.EvoluTCC.dto.MonografiaResponseDTO;
 import com.monografia.EvoluTCC.repositories.MonografiaRepository;
+import com.monografia.EvoluTCC.repositories.PreDefesaRepository;
 import com.monografia.EvoluTCC.repositories.UsuarioRepository;
 import com.monografia.EvoluTCC.Enums.TipoUsuario;
 import jakarta.transaction.Transactional;
@@ -46,6 +47,9 @@ public class MonografiaService {
 
     @Autowired
     private EspecialidadeRepository especialidadeRepository;
+
+    @Autowired
+    private PreDefesaRepository preDefesaRepository;
 
     @Autowired
     private UserProducer userProducer;
@@ -718,6 +722,7 @@ public List<MonografiaResponseDTO> listarMonografiasAprovadasPorAdmin(UUID admin
     // Filtra as monografias aprovadas por Orientador (ignora as aprovadas por Admin)
     monografiasAprovadas = monografiasAprovadas.stream()
         .filter(monografia -> monografia.getAprovadoPor() == TipoUsuario.ORIENTADOR) // Apenas monografias aprovadas por Orientador
+        .filter(monografia -> !preDefesaRepository.existsByMonografiaId(monografia.getId())) // Exclui se já tem pré-defesa
         .collect(Collectors.toList());
 
     // Adiciona links para os documentos de cada monografia
@@ -728,6 +733,7 @@ public List<MonografiaResponseDTO> listarMonografiasAprovadasPorAdmin(UUID admin
             .map(this::mapToMonografiaResponseDTO)
             .collect(Collectors.toList());
 }
+
 
 @Transactional
 public MonografiaResponseDTO getMonografiaAprovadaPorAdmin(UUID adminId, UUID monografiaId) {

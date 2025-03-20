@@ -14,6 +14,8 @@ import java.util.UUID;
 @Repository
 public interface PreDefesaRepository extends JpaRepository<PreDefesa, UUID> {
 
+        boolean existsByMonografiaId(UUID monografiaId);
+
     // Verifica se existe uma pré-defesa no mesmo intervalo de tempo e especialidade
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
            "FROM PreDefesa p " +

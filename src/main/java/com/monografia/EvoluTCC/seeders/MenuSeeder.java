@@ -38,10 +38,10 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Gestão de Monografias", "icon-paper", "/admin/monografias", tipo));
                 menus.add(new Menus("Calendário", "icon-calendar-60", "/admin/calendario", tipo));
                 menus.add(new Menus("Pré-Defesa", "icon-calendar-60", "/admin/pre-defesa", tipo));
-                menus.add(new Menus("Marcar Defesa", "icon-calendar-60", "/admin/defesa", tipo));
-                menus.add(new Menus("Usuarios", "icon-single-02", "/admin/user-inativos", tipo));
                 menus.add(new Menus("Defesa", "icon-calendar-60", "/admin/defesa", tipo));
                 menus.add(new Menus("Detalhes da Defesa", "icon-paper", "/admin/detalhe-defesa", tipo));
+                menus.add(new Menus("Usuarios", "icon-single-02", "/admin/user-inativos", tipo));
+                
             });
 
             aluno.ifPresent(tipo -> {
