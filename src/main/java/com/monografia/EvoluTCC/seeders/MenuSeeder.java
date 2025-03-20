@@ -41,6 +41,7 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Marcar Defesa", "icon-calendar-60", "/admin/defesa", tipo));
                 menus.add(new Menus("Usuarios", "icon-single-02", "/admin/user-inativos", tipo));
                 menus.add(new Menus("Defesa", "icon-calendar-60", "/admin/defesa", tipo));
+                menus.add(new Menus("Detalhes da Defesa", "icon-paper", "/admin/detalhe-defesa", tipo));
             });
 
             aluno.ifPresent(tipo -> {
@@ -50,6 +51,7 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Calendário", "icon-calendar-60", "/aluno/calendario", tipo)); 
                 menus.add(new Menus("Pré-Defesa", "icon-calendar-60", "/aluno/pre-defesa", tipo));
                 menus.add(new Menus("Defesa", "icon-calendar-60", "/aluno/defesa", tipo));
+                menus.add(new Menus("Detalhes da Defesa", "icon-paper", "/aluno/detalhe-defesa", tipo));
                // menus.add(new Menus("Monografias", "icon-book-bookmark", "/aluno/minhas-monografias", tipo)); 
             });
 
@@ -60,6 +62,8 @@ public class MenuSeeder implements CommandLineRunner {
                 menus.add(new Menus("Calendário", "icon-calendar-60", "/orientador/calendario", tipo)); 
                 menus.add(new Menus("Pré-Defesa", "icon-calendar-60", "/orientador/pre-defesa", tipo));
                 menus.add(new Menus("Defesa", "icon-calendar-60", "/orientador/defesa", tipo));
+                menus.add(new Menus("Detalhes da Defesa", "icon-paper", "/orientador/detalhe-defesa", tipo));
+
               
             });
 
